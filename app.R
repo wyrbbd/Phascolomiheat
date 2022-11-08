@@ -265,7 +265,7 @@ server <- function(input, output,session) {
   })
   
   
-  hist_data <- read.csv("./hist_data.csv")
+  hist_data <- read_csv("./hist_data.csv")
   hist_data <- hist_data %>%
     mutate(date = as.Date(datetime))
   
