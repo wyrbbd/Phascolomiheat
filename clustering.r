@@ -62,11 +62,21 @@ animate(p)
  
 # Code to make density plot
 library(ggthemes)
-ggplot() + 
+bkgd_map <- ggplot() + 
   geom_density_2d_filled(data=d, aes(x=lon, y=lat)) +
   geom_sf(data = vic_map, colour="white", fill=NA) +
+  #xlim(c(140, 150.5)) + ylim(c(33.5, 39.5)) +
+  scale_fill_grey() +
   theme_map() +
   theme(legend.position="none")
-  
+
+save(bkgd_map, file="bkgd_map.rda")  
+
+load("bkgd_map.rda")
+
+bkgd_map +
+  geom_point(d %>% dplyr::filter(date==as.Date("2020-01-08")), 
+             mapping=aes(x=lon, y=lat), 
+             colour="orange") 
 
 
