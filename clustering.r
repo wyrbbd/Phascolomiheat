@@ -41,22 +41,24 @@ if (requireNamespace("sf", quietly = TRUE)) {
   plot_spotoroo(result, type = "mov", bg = plot_vic_map(), step = 6)
 }
 
-result_data <- result$hotspots
+result_data <- result$hotspots%>%
+  mutate(membership = as.factor(membership))
 
 vic_map = ne_states(country = 'Australia', returnclass = 'sf')%>%
   filter(name == "Victoria")
 
 p = ggplot(result_data) +
   geom_sf(data = vic_map) +
-  geom_point(aes(group = obsTime, x = lon, y = lat), color = 'red', alpha = 0.2) + 
+  geom_point(aes(x = lon, y = lat,color = membership), alpha = 0.2) + 
   transition_time(obsTime) +
   exit_fade() +
   enter_fade() +
   labs(title = 'Time: {frame_time}') +
+  theme(legend.position = "none")+
   theme_bw()
 animate(p)
 
 
-
+ 
 
 

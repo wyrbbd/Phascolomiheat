@@ -1,0 +1,110 @@
+---
+title: "create_gif"
+author: "yiru wang"
+date: '2022-11-09'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(gganimate)
+library(tidyverse)
+library(spotoroo)
+library(rnaturalearth)
+library(ggplot2)
+```
+
+```{r}
+d <- read_csv("data/hotspot_2019_2020.csv")%>%
+  as.data.frame()
+
+data(hotspots)
+
+result <- hotspot_cluster(d,
+  lon = "lon",
+  lat = "lat",
+  obsTime = 'obsTime',
+  activeTime = 24,
+  adjDist = 3000,
+  minPts = 4,
+  minTime = 3,
+  ignitionCenter = "mean",
+  timeUnit = "h",
+  timeStep = 1
+)
+
+result_data <- result$hotspots%>%
+  mutate(membership = as.factor(membership))
+
+vic_map = ne_states(country = 'Australia', returnclass = 'sf')%>%
+  filter(name == "Victoria")
+
+p = ggplot(result_data) +
+  geom_sf(data = vic_map) +
+  geom_point(aes(x = lon, y = lat,color = membership), alpha = 0.2) + 
+  transition_time(obsTime) +
+  exit_fade() +
+  enter_fade() +
+  labs(title = 'Time: {frame_time}') +
+  theme_bw()+
+  theme(legend.position = 'none')
+animate(p)
+anim_save(filename = '2019_2020.gif',path = "./gifs/")
+```
+
+
+```{r}
+a = ggplot(result_data) +
+  geom_sf(data = vic_map) +
+  geom_point(aes(x = lon, y = lat,color = membership), alpha = 0.2) + 
+  theme_bw()+
+  theme(legend.position='none')
+a
+```
+
+
+```{r}
+d <- read_csv("data/vic_hist_hotspot.csv")%>%
+  mutate(date = as.Date(datetime))%>%
+  mutate(obsTime = as_datetime(datetime))%>%
+  mutate(obsTime = as.POSIXct(obsTime))%>%
+  extract(geometry, c('lon', 'lat'), '\\((.*), (.*)\\)', convert = TRUE)
+
+result <- hotspot_cluster(d,
+  lon = "lon",
+  lat = "lat",
+  obsTime = 'obsTime',
+  activeTime = 24,
+  adjDist = 3000,
+  minPts = 4,
+  minTime = 3,
+  ignitionCenter = "mean",
+  timeUnit = "h",
+  timeStep = 1
+)
+
+result_data <- result$hotspots%>%
+  mutate(membership = as.factor(membership))
+
+vic_map = ne_states(country = 'Australia', returnclass = 'sf')%>%
+  filter(name == "Victoria")
+
+p = ggplot(d) +
+  geom_sf(data = vic_map) +
+  geom_point(aes(x = lon, y = lat), alpha = 0.2) + 
+  transition_time(obsTime) +
+  exit_fade() +
+  enter_fade() +
+  labs(title = 'Time: {frame_time}') +
+  theme_bw()+
+  theme(legend.position = 'none')
+animate(p)
+anim_save(filename = 'all.gif',path = "./www/")
+```
+
+
+
+

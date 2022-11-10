@@ -67,24 +67,23 @@ ui <- dashboardPage(
             h2("Historical Hotspots", 
                style = 	"color:#4682B4"), 
             fluidRow(
-              box(selectInput("Year", "Years:",
-                              c("2002-2003","2003-2004","2004-2005","2005-2006",
-                                "2006-2007","2007-2008","2008-2009","2009-2010",
-                                "2010-2011","2011-2012","2012-2013","2013-2014",
-                                "2014-2015","2015-2016","2016-2017","2017-2018",
-                                "2018-2019","2019-2020","2020-2021","2021-2022")))),
-            fluidRow(
-              box(withLoader(plotOutput("history", height =600,width = "100%"),type = "html", loader = "loader1")),
+              box(withLoader(uiOutput("history", height =600,width = "100%"),type = "html", loader = "loader1")),
               #####map output with loader###
               box(withLoader(leafletOutput("map2", height =600,width = "100%"),type = "html", loader = "loader1"))),
-            fluidRow(sliderInput("DatesMerge", "Dates:",
-                        min = as.Date("2020-10-01","%Y-%m-%d"),
-                        max = as.Date("2021-02-28","%Y-%m-%d"),
-                        value=as.Date("2020-10-01","%Y-%m-%d"),
+            fluidRow(
+              box(selectInput("Year", "Years:",
+                              c("2008-2022","2008-2009","2009-2010",
+                                "2010-2011","2011-2012","2012-2013","2013-2014",
+                                "2014-2015","2015-2016","2016-2017","2017-2018",
+                                "2018-2019","2019-2020","2020-2021","2021-2022"))),
+            box(sliderInput("DatesMerge", "Dates:",
+                        min = as.Date("10-01","%m-%d"),
+                        max = as.Date("02-28","%m-%d"),
+                        value=as.Date("10-01","%m-%d"),
                         width = "100%",
                         animate =
                           animationOptions(interval = 500, loop = F)
-                        ))),
+                        )))),
     tabItem(tabName = "table2",
             shinyDashboardThemes(theme = "blue_gradient"),
             h2("Data: Real Time Hotspot", 
@@ -145,7 +144,8 @@ server <- function(input, output,session) {
   t <- reactive({
     
     hotspot_show <- data_now()%>%
-      filter(confidence > 50)
+      filter(confidence > 50)%>%
+      filter(power>100)
     hotspot_show$hours_since_hotspot_class <- cut(hotspot_show$hours_since_hotspot,
                                                   breaks = c(0,2,6,24,48,72),
                                                   labels =c("0-2","2-6","6-24","24-48","48-72"))
@@ -265,60 +265,165 @@ server <- function(input, output,session) {
   })
   
   
-  hist_data <- read_csv("./hist_data.csv")
-  hist_data <- hist_data %>%
-    mutate(date = as.Date(datetime))
-  
-  
-  timeData <- reactive({
-    hist_data2 <- hist_data%>%
-      filter(year == input$Year)
-    hist_data2
-  })
-  
+  # hist_data <- read_csv("./hist_data.csv")
+  # hist_data <- hist_data %>%
+  #   mutate(date = as.Date(datetime))
+  # 
+  # 
+  # timeData <- reactive({
+  #   hist_data2 <- hist_data%>%
+  #     filter(year == input$Year)
+  #   hist_data2
+  # })
 
+  
  
-  output$history <- renderPlot({
+  output$history <- renderUI({
     
-    plot<- ggplot()+
-      geom_sf(data = vic_map)+
-      geom_point(data = timeData(), aes(longitude, latitude),color = "red")+
-      theme_bw() +
-      transition_states(date)+
-      enter_recolor(fill = "#f0f5f9") +
-      labs(subtitle = "Date:{previous_state}")
-    plot
+    # plot<- ggplot()+
+    #   geom_sf(data = vic_map)+
+    #   geom_point(data = timeData(), aes(longitude, latitude),color = "red")+
+    #   theme_bw() +
+    #   transition_states(date)+
+    #   enter_recolor(fill = "#f0f5f9") +
+    #   labs(subtitle = "Date:{previous_state}")
+    # plot
+    if(input$Year == "2008-2022"){            
+      img(height =600, width = 700,src = "all.gif")
+    }                                        
+    else if(input$Year == "2009-2010"){            
+      img(height =600, width = 700,src = "2009_2010.gif")
+    }                                        
+    else if(input$Year == "2010-2011"){            
+      img(height =600, width = 700,src = "2010_2011.gif")
+    } 
+    else if(input$Year == "2011-2012"){            
+      img(height =600, width = 700,src = "2011_2012.gif")
+    } 
+    else if(input$Year == "2012-2013"){            
+      img(height =600, width = 700,src = "2012_2013.gif")
+    } 
+    else if(input$Year == "2013-2014"){            
+      img(height =600, width = 700,src = "2013_2014.gif")
+    } 
+    else if(input$Year == "2014-2015"){            
+      img(height =600, width = 700,src = "2014_2015.gif")
+    } 
+    else if(input$Year == "2015-2016"){            
+      img(height =600, width = 700,src = "2015_2016.gif")
+    } 
+    else if(input$Year == "2016-2017"){            
+      img(height =600, width = 700,src = "2016_2017.gif")
+    } 
+    else if(input$Year == "2017-2018"){            
+      img(height =600, width = 700,src = "2017_2018.gif")
+    } 
+    else if(input$Year == "2018-2019"){            
+      img(height =600, width = 700,src = "2018_2019.gif")
+    } 
+    else if(input$Year == "2019-2020"){            
+      img(height =600, width = 700,src = "2019_2020.gif")
+    } 
+    else if(input$Year == "2020-2021"){            
+      img(height =600, width = 700,src = "2020_2021.gif")
+    } 
+    else if(input$Year == "2021-2022"){            
+      img(height =600, width = 700,src = "2021_2022.gif")
+    }
+    else if(input$Year == "2008-2009"){            
+      img(height =600, width = 700,src = "2008_2009.gif")
+    }
     
   })
   
 
   output$map2 <- renderLeaflet({
+    
+    if(input$Year == "2008-2022"){            
+      map2_data <- read_csv("data/vic_hist_hotspot.csv")%>%
+        mutate(date = as.Date(datetime))%>%
+        mutate(obsTime = as_datetime(datetime))%>%
+        mutate(obsTime = as.POSIXct(obsTime))%>%
+        extract(geometry, c('lon', 'lat'), '\\((.*), (.*)\\)', convert = TRUE)
+    }                                        
+    else if(input$Year == "2009-2010"){            
+      map2_data <- read_csv("data/hotspot_2009_2010.csv")
+    }                                        
+    else if(input$Year == "2010-2011"){            
+      map2_data <- read_csv("data/hotspot_2010_2011.csv")
+    } 
+    else if(input$Year == "2011-2012"){            
+      map2_data <- read_csv("data/hotspot_2011_2012.csv")
+    } 
+    else if(input$Year == "2012-2013"){            
+      map2_data <- read_csv("data/hotspot_2012_2013.csv")
+    } 
+    else if(input$Year == "2013-2014"){            
+      map2_data <- read_csv("data/hotspot_2013_2014.csv")
+    } 
+    else if(input$Year == "2014-2015"){            
+      map2_data <- read_csv("data/hotspot_2014_2015.csv")
+    } 
+    else if(input$Year == "2015-2016"){            
+      map2_data <- read_csv("data/hotspot_2015_2016.csv")
+    } 
+    else if(input$Year == "2016-2017"){            
+      map2_data <- read_csv("data/hotspot_2016_2017.csv")
+    } 
+    else if(input$Year == "2017-2018"){            
+      map2_data <- read_csv("data/hotspot_2017_2018.csv")
+    } 
+    else if(input$Year == "2018-2019"){            
+      map2_data <- read_csv("data/hotspot_2018_2019.csv")
+    } 
+    else if(input$Year == "2019-2020"){            
+      map2_data <- read_csv("data/hotspot_2019_2020.csv")
+    } 
+    else if(input$Year == "2020-2021"){            
+      map2_data <- read_csv("data/hotspot_2020_2021.csv")
+    } 
+    else if(input$Year == "2021-2022"){            
+      map2_data <- read_csv("data/hotspot_2021_2022.csv")
+    }
+    else if(input$Year == "2008-2009"){            
+      map2_data <- read_csv("data/hotspot_2008_2009.csv")
+    }
+    
+    map2_data2 <- map2_data %>%
+      mutate(month_day = str_sub(date,6,10))%>%
+      filter(month_day == input$Year)
+    
     map_2 <- basemap %>%
       addCircles(
-        data = timeData(),
+        data = map2_data2,
         color = "red",
         # create custom labels
         label = paste(
-          "Time: ", timeData()$datetime, "<br>",
-          "Latitude: ",timeData()$latitude,  "<br>",
-          "Longitude:",timeData()$longitude ,"<br>",
-          "Power: ", timeData()$power
+          "Time: ", map2_data2$datetime, "<br>",
+          "Latitude: ",map2_data2$lat,  "<br>",
+          "Longitude:",map2_data2$lon,"<br>",
+          "Power: ", map2_data2$power
         )
       )
     map_2
-    
+
   })
   
-  output$Table2 <- renderDataTable({ 
-    
-    datatable(test,
+  output$Table2 <- renderDataTable({
+    datatable_data <- read_csv("data/vic_hist_hotspot.csv")%>%
+      mutate(date = as.Date(datetime))%>%
+      mutate(obsTime = as_datetime(datetime))%>%
+      mutate(obsTime = as.POSIXct(obsTime))%>%
+      extract(geometry, c('lon', 'lat'), '\\((.*), (.*)\\)', convert = TRUE)
+
+    datatable(datatable_data,
               rownames = FALSE,
               filter = 'top',
               caption = "Table 2: Historical Hotspots",
               extensions = 'Buttons',
               options = list(dom = 'Bfrtip',
                              buttons = c('copy','csv','excel','pdf')))
-    
+
   })
 
 }
