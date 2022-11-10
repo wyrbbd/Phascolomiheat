@@ -60,5 +60,13 @@ animate(p)
 
 
  
+# Code to make density plot
+library(ggthemes)
+ggplot() + 
+  geom_density_2d_filled(data=d, aes(x=lon, y=lat)) +
+  geom_sf(data = vic_map, colour="white", fill=NA) +
+  theme_map() +
+  theme(legend.position="none")
+  
 
 
