@@ -1,0 +1,368 @@
+---
+title: "Bushfires"
+subtitle: "ETC5543"  
+author: "Yiru Wang (30898064)"
+date: '`r Sys.Date()`'
+output:
+  xaringan::moon_reader:
+    css: xaringan-themer.css
+    nature:
+      slideNumberFormat: "%current%"
+      highlightStyle: github
+      highlightLines: true
+      ratio: 16:9
+      countIncrementalSlides: true
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE,
+        digits = 4,
+        scipen=999)
+knitr::opts_chunk$set(
+  fig.width=9, fig.height=3.5, 
+  fig.retina=3,
+  out.width = "100%",
+  cache = FALSE,
+  echo = FALSE,
+  message = FALSE, 
+  warning = FALSE,
+  hiline = TRUE
+)
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+library(xaringanthemer)
+library(xaringanExtra)
+style_duo_accent(
+  primary_color = "#6890B4",
+  secondary_color = "#F2680C",
+  inverse_header_color = "#FFFFFF",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+```
+
+```{css}
+.box-blue {
+  width: 100%;
+  border-radius: 25px;
+  padding: 1px 1px 1px 1px;
+  margin: 0;
+  background-color: #a4bcd2;
+}
+
+h4 {
+  margin: 10px;
+  color: #6890B4;
+}
+
+ul {
+  margin: 20px;
+}
+```
+
+
+```{r library}
+library(tidyverse)
+library(plotly)
+library(sf)
+library(hrbrthemes)
+library(scales)
+library(leaflet)
+library(here)
+library(lubridate)
+```
+
+```{r xaringan-animate-css, echo=FALSE}
+xaringanExtra::use_animate_css()
+xaringanExtra::use_panelset()
+```
+
+# 📚 Introduction
+
+.panelset[
+
+  .panel[.panel-name[Background information]
+### A little bit of background information about gender equality...
+xxxxxxxxx
+  ]
+
+  .panel[.panel-name[Data description]
+### Data used in our analysis
+xxxxxxxx
+  ]
+
+]
+
+
+.footnote[Note: data sources and packages used are available at the end of the slides]
+
+---
+class: animated, rotateInDownLeft
+
+# 📝 Agenda
+
+#### Overview of COVID status in Victoria from May to Sep 2021
+
+.box-blue[
+- xxxxxxx
+- xxxxxx
+- xxxxxxx
+]
+
+#### Spread of COVID cases in Victorian community
+
+.box-blue[
+- xxxxxx
+- xxxxxx
+- xxxxxx
+- xxxxxx
+
+]
+
+#### Vaccination status and lockdowns
+
+.box-blue[
+- xxxxxxxx
+- xxxxxx
+- xxxxxx
+]
+
+
+---
+
+class: inverse, middle, center, animated, fadeIn
+layout: false
+
+# xxxxxxxxx
+
+---
+
+class: animated, bounceInDown
+
+## xxxxxxxxxxxx
+
+```{r}
+
+```
+
+.panelset[
+
+  .panel[.panel-name[xxxxxxx]
+  .pull-left[
+
+```{r}
+
+```
+  ]
+
+  .pull-right[
+- xxxxxxxxx
+
+- xxxxxxxx
+  ]
+  ]
+
+  
+  
+  .panel[.panel-name[xxxxxxxx]
+  .pull-left[
+```{r}
+
+```
+
+```{r}
+
+
+
+```
+
+  ]
+  
+
+  .pull-right[
+- xxxxxxxx
+
+- xxxxxxx
+
+- xxxxxxxx
+  
+  ]
+  ]
+
+
+
+  .panel[.panel-name[xxxxxxxxxx]
+  .pull-left[
+
+```{r}
+
+```
+
+.panelset[
+  
+  .panel[.panel-name[xxxxxxxx]
+         
+   .pull-left[
+           
+```{r, fig.height=6}
+
+```
+  
+  ]
+         
+  .pull-right[
+           
+- xxxxxxxxx
+           
+- xxxxxxx
+           
+- xxxxxxx
+           
+   ]
+  ]
+  
+  
+  .panel[.panel-name[xxxxxx]
+  
+   .pull-left[
+   
+```{r}
+ 
+```
+
+- xxxxxxx
+         
+- xxxxxxxxxx
+   
+  ]
+]
+
+---
+class: inverse, middle, center, animated, fadeIn
+layout: false
+
+# xxxxxx
+
+---
+class: animated, rotateInDownLeft
+
+## xxxxxxx
+
+```{r}
+
+```
+
+.panelset[
+
+  .panel[.panel-name[xxxxxxx]
+  
+```{r, fig.height=3}
+
+```
+
+- xxxxxxx
+           
+- xxxxxxx
+           
+   
+  ]
+
+
+ .panel[.panel-name[xxxxxxxx]
+ 
+  .pull-left[
+  
+```{r, fig.height=4, fig.width=5}
+
+```
+
+]
+
+ .pull-right[
+ 
+- xxxxxxxxxx
+           
+- xxxxxxxx
+           
+- xxxxxxxx
+    
+  ]       
+  
+  ]
+  
+ .panel[.panel-name[xxxxxxx]
+ 
+  .left-column[
+
+- xxxxxxx
+           
+- xxxxxxx
+
+]
+ 
+  .right-column[
+    
+```{r, fig.height=4.5}
+
+```
+    
+  ]
+   
+  ]
+  
+]
+
+---
+class: animated, bounceInDown
+
+# 📌 Conclusion
+
+- xxxxxx
+
+- xxxxxxxx
+
+- xxxxxxx
+
+
+---
+class: animated, fadeIn
+
+<center><img src="https://retailpharmacymagazine.com.au/wp-content/uploads/2020/05/Rb-health-thanks-pharmacist-retail-pharmacy-696x392.jpg" height="300px" /></center>
+
+
+.pull-left[
+#### Slides are created using the following R packages:
+
+[xaringan](https://github.com/yihui/xaringan)<br>
+[gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer)<br>
+[xaringanExtra](https://github.com/gadenbuie/xaringanExtra/)<br>
+[tidyverse](https://www.tidyverse.org/)<br>
+[plotly](https://www.rdocumentation.org/packages/plotly/versions/4.5.2)<br>
+[hrbrthemes](http://github.com/hrbrmstr/hrbrthemes)<br>
+[sf](https://www.rdocumentation.org/packages/sf/versions/0.1-1)<br>
+[scales](https://CRAN.R-project.org/package=scales)<br>
+[leaflet](https://CRAN.R-project.org/package=leaflet)
+
+]
+
+.pull-right[
+
+#### Data sources: 
+
+[Victorian COVID-19 data](https://www.coronavirus.vic.gov.au/victorian-coronavirus-covid-19-data) <br> 
+[Local Government Area Boundaries (Road) (polygon) - Vicmap Admin](https://datashare.maps.vic.gov.au/search?q=bc822a9c-3766-57ac-a034-bcad3fb66d86)<br>
+[Australian COVID-19 data](https://github.com/M3IT/COVID-19_Data) <br>
+[Victoria unknown cases data](https://www.covid19data.com.au/)<br>
+[Australia COVID-19 data - GitHub](https://github.com/M3IT/COVID-19_Data)<br>
+[Weekly COVID-19 vaccine data](https://www.coronavirus.vic.gov.au/weekly-covid-19-vaccine-data)
+
+]
+
+
+---
+class: middle, animated, rotateInDownLeft
+
+<center><img src="https://memegenerator.net/img/instances/80187761.jpg" height="500px" /></center>
+

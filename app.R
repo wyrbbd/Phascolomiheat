@@ -67,23 +67,27 @@ ui <- dashboardPage(
             h2("Historical Hotspots", 
                style = 	"color:#4682B4"), 
             fluidRow(
-              box(withLoader(uiOutput("history", height =600,width = "100%"),type = "html", loader = "loader1")),
-              #####map output with loader###
-              box(withLoader(leafletOutput("map2", height =600,width = "100%"),type = "html", loader = "loader1"))),
+              box(withLoader(uiOutput("history", height =600,width = "100%"),type = "html", loader = "loader1"))
+              # ,
+              # #####map output with loader###
+              # box(withLoader(leafletOutput("map2", height =600,width = "100%"),type = "html", loader = "loader1"))
+              ),
             fluidRow(
               box(selectInput("Year", "Years:",
-                              c("2008-2022","2008-2009","2009-2010",
-                                "2010-2011","2011-2012","2012-2013","2013-2014",
-                                "2014-2015","2015-2016","2016-2017","2017-2018",
-                                "2018-2019","2019-2020","2020-2021","2021-2022"))),
-            box(sliderInput("DatesMerge", "Dates:",
-                        min = as.Date("10-01","%m-%d"),
-                        max = as.Date("02-28","%m-%d"),
-                        value=as.Date("10-01","%m-%d"),
-                        width = "100%",
-                        animate =
-                          animationOptions(interval = 500, loop = F)
-                        )))),
+                              c("2021-2022","2020-2021","2019-2020","2018-2019",
+                                "2017-2018","2016-2017","2015-2016","2014-2015",
+                                "2013-2014","2012-2013","2011-2012","2010-2011",
+                                "2009-2010","2008-2009")))
+            #   ,
+            # box(sliderInput("DatesMerge", "Dates:",
+            #             min = as.Date("10-01","%m-%d"),
+            #             max = as.Date("02-28","%m-%d"),
+            #             value=as.Date("10-01","%m-%d"),
+            #             width = "100%",
+            #             animate =
+            #               animationOptions(interval = 500, loop = F)
+            #             ))
+            )),
     tabItem(tabName = "table2",
             shinyDashboardThemes(theme = "blue_gradient"),
             h2("Data: Real Time Hotspot", 
@@ -280,14 +284,6 @@ server <- function(input, output,session) {
  
   output$history <- renderUI({
     
-    # plot<- ggplot()+
-    #   geom_sf(data = vic_map)+
-    #   geom_point(data = timeData(), aes(longitude, latitude),color = "red")+
-    #   theme_bw() +
-    #   transition_states(date)+
-    #   enter_recolor(fill = "#f0f5f9") +
-    #   labs(subtitle = "Date:{previous_state}")
-    # plot
     if(input$Year == "2008-2022"){            
       img(height =600, width = 700,src = "all.gif")
     }                                        
@@ -389,23 +385,23 @@ server <- function(input, output,session) {
       map2_data <- read_csv("data/hotspot_2008_2009.csv")
     }
     
-    map2_data2 <- map2_data %>%
-      mutate(month_day = str_sub(date,6,10))%>%
-      filter(month_day == input$Year)
+    # map2_data2 <- map2_data %>%
+    #   mutate(month_day = str_sub(date,6,10))%>%
+    #   filter(month_day == input$Year)
     
-    map_2 <- basemap %>%
-      addCircles(
-        data = map2_data2,
-        color = "red",
-        # create custom labels
-        label = paste(
-          "Time: ", map2_data2$datetime, "<br>",
-          "Latitude: ",map2_data2$lat,  "<br>",
-          "Longitude:",map2_data2$lon,"<br>",
-          "Power: ", map2_data2$power
-        )
-      )
-    map_2
+    # map_2 <- basemap %>%
+    #   addCircles(
+    #     data = map2_data2,
+    #     color = "red",
+    #     # create custom labels
+    #     label = paste(
+    #       "Time: ", map2_data2$datetime, "<br>",
+    #       "Latitude: ",map2_data2$lat,  "<br>",
+    #       "Longitude:",map2_data2$lon,"<br>",
+    #       "Power: ", map2_data2$power
+    #     )
+    #   )
+    # map_2
 
   })
   
