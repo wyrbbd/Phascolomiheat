@@ -79,17 +79,17 @@ xaringanExtra::use_animate_css()
 xaringanExtra::use_panelset()
 ```
 
-# 📚 Introduction
+# 📖 Introduction
 
 .panelset[
 
-  .panel[.panel-name[Background information]
-### A little bit of background information about gender equality...
+  .panel[.panel-name[Motivation]
+### A little bit of background information about bushfire (the website: disadvantage)
 xxxxxxxxx
   ]
 
   .panel[.panel-name[Data description]
-### Data used in our analysis
+### Data used in our analysis(the variables),how we got the data
 xxxxxxxx
   ]
 
@@ -103,152 +103,106 @@ class: animated, rotateInDownLeft
 
 # 📝 Agenda
 
-#### Overview of COVID status in Victoria from May to Sep 2021
+#### Current hotspots 
 
 .box-blue[
-- xxxxxxx
-- xxxxxx
-- xxxxxxx
+- clustering
+- visualization and warning
+- data table
 ]
 
-#### Spread of COVID cases in Victorian community
+#### Historical hotspots
 
 .box-blue[
-- xxxxxx
-- xxxxxx
-- xxxxxx
-- xxxxxx
+
+- time selection
+- visualization
+- data table
 
 ]
 
-#### Vaccination status and lockdowns
 
-.box-blue[
-- xxxxxxxx
-- xxxxxx
-- xxxxxx
-]
-
-
----
-
-class: inverse, middle, center, animated, fadeIn
-layout: false
-
-# xxxxxxxxx
-
----
-
-class: animated, bounceInDown
-
-## xxxxxxxxxxxx
-
-```{r}
-
-```
-
-.panelset[
-
-  .panel[.panel-name[xxxxxxx]
-  .pull-left[
-
-```{r}
-
-```
-  ]
-
-  .pull-right[
-- xxxxxxxxx
-
-- xxxxxxxx
-  ]
-  ]
-
-  
-  
-  .panel[.panel-name[xxxxxxxx]
-  .pull-left[
-```{r}
-
-```
-
-```{r}
-
-
-
-```
-
-  ]
-  
-
-  .pull-right[
-- xxxxxxxx
-
-- xxxxxxx
-
-- xxxxxxxx
-  
-  ]
-  ]
-
-
-
-  .panel[.panel-name[xxxxxxxxxx]
-  .pull-left[
-
-```{r}
-
-```
-
-.panelset[
-  
-  .panel[.panel-name[xxxxxxxx]
-         
-   .pull-left[
-           
-```{r, fig.height=6}
-
-```
-  
-  ]
-         
-  .pull-right[
-           
-- xxxxxxxxx
-           
-- xxxxxxx
-           
-- xxxxxxx
-           
-   ]
-  ]
-  
-  
-  .panel[.panel-name[xxxxxx]
-  
-   .pull-left[
-   
-```{r}
- 
-```
-
-- xxxxxxx
-         
-- xxxxxxxxxx
-   
-  ]
-]
 
 ---
 class: inverse, middle, center, animated, fadeIn
 layout: false
 
-# xxxxxx
+# 🔥 current hotspots
 
 ---
 class: animated, rotateInDownLeft
 
-## xxxxxxx
+.panelset[
+
+  .panel[.panel-name[clustering]
+  
+```{r, fig.height=3}
+
+```
+
+- introduce spotoroo
+           
+- how we cluster the data
+           
+   
+  ]
+
+
+ .panel[.panel-name[visualization]
+ 
+  .pull-left[
+  
+```{r, fig.height=4, fig.width=5}
+
+```
+
+]
+
+ .pull-right[
+ 
+- map type
+           
+- hours
+           
+- hotspots detail
+
+- how warning work 
+    
+  ]       
+  
+  ]
+  
+ .panel[.panel-name[data table]
+ 
+  .left-column[
+
+- sort and search
+           
+- download
+
+]
+ 
+  .right-column[
+    
+```{r, fig.height=4.5}
+
+```
+    
+  ]
+   
+  ]
+  
+]
+
+---
+class: inverse, middle, center, animated, fadeIn
+layout: false
+
+# 🔙 historical hotspot
+
+---
+class: animated, rotateInDownLeft
+
 
 ```{r}
 
@@ -256,7 +210,7 @@ class: animated, rotateInDownLeft
 
 .panelset[
 
-  .panel[.panel-name[xxxxxxx]
+  .panel[.panel-name[time selection]
   
 ```{r, fig.height=3}
 
@@ -270,7 +224,7 @@ class: animated, rotateInDownLeft
   ]
 
 
- .panel[.panel-name[xxxxxxxx]
+ .panel[.panel-name[visualization]
  
   .pull-left[
   
@@ -292,7 +246,7 @@ class: animated, rotateInDownLeft
   
   ]
   
- .panel[.panel-name[xxxxxxx]
+ .panel[.panel-name[data table]
  
   .left-column[
 
@@ -317,7 +271,7 @@ class: animated, rotateInDownLeft
 ---
 class: animated, bounceInDown
 
-# 📌 Conclusion
+# 😖 Challenges
 
 - xxxxxx
 
@@ -327,6 +281,31 @@ class: animated, bounceInDown
 
 
 ---
+class: animated, bounceInDown
+
+# 📌 Learning outcome
+
+- xxxxxx
+
+- xxxxxxxx
+
+- xxxxxxx
+
+
+---
+class: animated, bounceInDown
+
+# 🤔 Future Considerations
+
+- xxxxxx
+
+- xxxxxxxx
+
+- xxxxxxx
+
+
+---
+
 class: animated, fadeIn
 
 <center><img src="https://retailpharmacymagazine.com.au/wp-content/uploads/2020/05/Rb-health-thanks-pharmacist-retail-pharmacy-696x392.jpg" height="300px" /></center>
