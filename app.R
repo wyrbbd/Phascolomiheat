@@ -18,6 +18,8 @@ library(rintrojs)
 library(leaflet)
 library(formattable)
 library(cranlogs)
+library(ggthemes)
+library(spotoroo)
 ui <- dashboardPage(
   dashboardHeader(title = "Real-Time Hotspot"),
   dashboardSidebar(
@@ -34,7 +36,7 @@ ui <- dashboardPage(
     useShinyjs(),
     tags$div(id = "welcome",
              style = 'color:pink;',
-             list(h4("Hello and welcome to our shiny dashboard. This is a welcome message and I will disappear in 60s!"),
+             list(h4("Hello and welcome to our shiny dashboard. This is a welcome message and I will disappear in 30s!"),
                   hr())),
     #bsModal(id = 'startupModal', title = 'Dum Dum', trigger = '',
            # size = 'large', p("here is my mumbo jumbo")),
@@ -47,7 +49,7 @@ ui <- dashboardPage(
             ####Title####
             h2("Hotspot Map: Real Time ", 
                style = 	"color:#4682B4"), 
-            actionButton("check", "Check"),
+            actionButton("check", "Check new bushfire"),
             actionButton("help", "Press for instructions"),
             fluidRow(
                 #####map output with loader###
@@ -65,29 +67,29 @@ ui <- dashboardPage(
             shinyDashboardThemes(theme = "blue_gradient"),
             ####Title####
             h2("Historical Hotspots", 
-               style = 	"color:#4682B4"), 
+               style = 	"color:#4682B4"),
+            actionButton("help2", "Press for instructions"),
             fluidRow(
-              box(withLoader(uiOutput("history", height =600,width = "100%"),type = "html", loader = "loader1"))
-              # ,
-              # #####map output with loader###
-              # box(withLoader(leafletOutput("map2", height =600,width = "100%"),type = "html", loader = "loader1"))
-              ),
-            fluidRow(
-              box(selectInput("Year", "Years:",
+              box(selectInput(inputId = "Year", "Years:",
                               c("2021-2022","2020-2021","2019-2020","2018-2019",
                                 "2017-2018","2016-2017","2015-2016","2014-2015",
                                 "2013-2014","2012-2013","2011-2012","2010-2011",
-                                "2009-2010","2008-2009")))
-            #   ,
-            # box(sliderInput("DatesMerge", "Dates:",
-            #             min = as.Date("10-01","%m-%d"),
-            #             max = as.Date("02-28","%m-%d"),
-            #             value=as.Date("10-01","%m-%d"),
-            #             width = "100%",
-            #             animate =
-            #               animationOptions(interval = 500, loop = F)
-            #             ))
-            )),
+                                "2009-2010","2008-2009"),width = "100%")),
+              box(sliderInput(inputId = "Hours", "Days Since Fire Season:",
+                              min = 0,
+                              max = 150,
+                              value= 0,
+                              width = "100%",
+                              # animate =
+                              #   animationOptions(interval = 500, loop = F)
+              ))
+            ),
+            fluidRow(
+              box(withLoader(uiOutput("history"),type = "html", loader = "loader1"))
+              ,
+              #####map output with loader###
+              box(withLoader(plotOutput("map2",height =600),type = "html", loader = "loader1"))
+              )),
     tabItem(tabName = "table2",
             shinyDashboardThemes(theme = "blue_gradient"),
             h2("Data: Real Time Hotspot", 
@@ -102,15 +104,15 @@ server <- function(input, output,session) {
   
   steps <- reactive(
     data.frame(
-      element=c(".sidebar-menu", ".main-header", ".sidebar-toggle", ".active", "#map1"),
+      element=c(".sidebar-menu",".sidebar-toggle", "#map1","#check"),
       intro=c(
-        "This is a sidebar. Note that we access it with '.' instead of '#', because we track its class and not its id.",
-        "This is a header.",
-        "This is a button that allows to close and open the sidebar.",
-        "This is the active element of the sidebar.",
-        "Here is the map that will be updated automatically every 10 minutes."
+        "Here is the master control, which you can choose at will.",
+        "Click here to put away the master control.",
+        "Here are the current fire points monitored by remote sensing data, 
+        the colours represent the difference in time and the map is updated every ten minutes.",
+        "Click here to check if any new bushfires have appeared since opening this app."
       ),
-      position=c("right", "bottom", "bottom", "right", "top")
+      position=c("right", "bottom", "bottom", "right")
     )
   )
   
@@ -126,7 +128,7 @@ server <- function(input, output,session) {
   )
   
   # welcome message
-  delay(60000,hide("welcome"))
+  delay(30000,hide("welcome"))
   
   au_map <-ne_states(country = c("australia"), returnclass ="sf")%>%
     select(state = name, geometry)
@@ -145,11 +147,14 @@ server <- function(input, output,session) {
     vic_hotspot2
   })
   
+  
+  
   t <- reactive({
     
-    hotspot_show <- data_now()%>%
-      filter(confidence > 50)%>%
-      filter(power>100)
+    hotspot_show <- data_now()
+    # %>%
+    #   filter(confidence > 50)%>%
+    #   filter(power>6)
     hotspot_show$hours_since_hotspot_class <- cut(hotspot_show$hours_since_hotspot,
                                                   breaks = c(0,2,6,24,48,72),
                                                   labels =c("0-2","2-6","6-24","24-48","48-72"))
@@ -160,6 +165,35 @@ server <- function(input, output,session) {
     
     
   })
+  
+  recent_hotspot_data_1 <- geojsonsf::geojson_sf("https://hotspots.dea.ga.gov.au/data/recent-hotspots.json")
+  vic_hotspot1_1 <- recent_hotspot_data_1 %>%
+    st_set_crs("WGS 84")
+  vic_map <- vic_map %>%st_set_crs("WGS 84")
+  recent_hotspot_data_1 <- recent_hotspot_data_1 %>%st_set_crs("WGS 84")
+  vic_hotspot2_1 = st_intersects(vic_map$geometry, recent_hotspot_data_1$geometry)
+  vic_hotspot2_1 = vic_hotspot1_1[vic_hotspot2_1[[1]],]
+  hotspot_show1 <- vic_hotspot2_1
+  # %>%
+  #   filter(confidence > 50)%>%
+  #   filter(power>6)
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"T"," ")
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"Z"," ")
+  hotspot_show1$datetime <- as_datetime(hotspot_show1$datetime) + dhours(10)
+  
+  result <- hotspot_cluster(hotspot_show1,
+                            lon = "longitude",
+                            lat = "latitude",
+                            obsTime = 'datetime',
+                            activeTime = 24,
+                            adjDist = 3000,
+                            minPts = 4,
+                            minTime = 3,
+                            ignitionCenter = "mean",
+                            timeUnit = "h",
+                            timeStep = 1
+  )
+  result_numbership <- max(result$hotspots$membership)
   
   pals = colorFactor(palette =c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
                      levels = c("0-2","2-6","6-24","24-48","48-72"))
@@ -208,9 +242,11 @@ server <- function(input, output,session) {
     )
   output$map1 <- renderLeaflet({
     map_1 <- basemap %>%
-      addCircles(
+      addCircleMarkers(
         data = t(),
-        color = ~pals(hours_since_hotspot_class),
+        radius = 4,
+        color  = ~pals(hours_since_hotspot_class),
+        fillOpacity = 1,
         # create custom labels
         label = paste(
           "Time: ", t()$datetime, "<br>",
@@ -233,27 +269,43 @@ server <- function(input, output,session) {
   ## warning message
   
    warning <- reactive({ 
-      warning_data <- data_now()%>%
-        select(latitude,temp_kelvin,datetime,longitude,
-               satellite,confidence,australian_state,geometry)
-      warning_data$datetime <- str_replace(warning_data$datetime,"T"," ")
-      warning_data$datetime <- str_replace(warning_data$datetime,"Z"," ")
-      warning_data$datetime <- as_datetime(warning_data$datetime)
-      warning_data2 <- warning_data %>%
-        mutate(time = as.numeric(Sys.time() - datetime,units = "mins"))%>%
-        filter(time <= 20)
-      warning_data2
-      
+     
+     warning_data <- t()%>%
+       select(latitude,datetime,longitude)
+     # warning_data$datetime <- str_replace(warning_data$datetime,"T"," ")
+     # warning_data$datetime <- str_replace(warning_data$datetime,"Z"," ")
+     # warning_data$datetime <- as_datetime(warning_data$datetime)
+     # warning_data2 <- warning_data %>%
+     #   mutate(time = as.numeric(Sys.time() - datetime,units = "mins"))%>%
+     #   filter(time <= 20)
+     # warning_data2
+     
+     result2 <- hotspot_cluster(warning_data,
+                               lon = "longitude",
+                               lat = "latitude",
+                               obsTime = 'datetime',
+                               activeTime = 24,
+                               adjDist = 3000,
+                               minPts = 4,
+                               minTime = 3,
+                               ignitionCenter = "mean",
+                               timeUnit = "h",
+                               timeStep = 1
+     )
+     
+      new_result_numbership <- max(result2$hotspots$membership)
+      check_warning <- new_result_numbership - result_numbership
+      check_warning
       
       })
    #toggleModal(session, "startupModal", toggle = "open")
    
   
-   observeEvent(input$check,if (is.null(warning())) {
-     alert("Warning: A new Hotspot has appeared!")
+   observeEvent(input$check,if (warning() > 0) {
+     alert("Warning: A new Fire has appeared!")
    }
    else
-   {alert("No New Hotspot!")})
+   {alert("No New Fire!")})
   # observeEvent(output$map1,alert("Warning: A new Hotspot has appeared!"))
   
   output$Table1 <- renderDataTable({ 
@@ -280,7 +332,31 @@ server <- function(input, output,session) {
   #   hist_data2
   # })
 
+  steps2 <- reactive(
+    data.frame(
+      element=c("Year","#Hours", "#history","#map2"),
+      intro=c(
+        "Here you can select the fire season you want to see, 
+        from 1 October to March each year. Data for 2021-2022 is displayed by default.",
+        "Drag the sliding axis to see the daily occurrence of fires after the start of the selected fire season.",
+        "Dynamic map of fire points for the selected year, with different colours representing different fires.",
+        "The black density map represents the extent of fire occurrence for the year 
+        and the orange dots represent the fires that occurred on the day of selection."
+      ),
+      position=c("bottom", "bottom", "bottom", "right")
+    )
+  )
   
+  observeEvent(input$help2,
+               introjs(session,
+                       options = list(steps=steps2(),
+                                      "nextLabel"="Next",
+                                      "prevLabel"="Previous",
+                                      "skipLabel"="Skip"
+                       ),
+                       events = list("oncomplete"=I('alert("Done")'))
+               )
+  )
  
   output$history <- renderUI({
     
@@ -333,57 +409,96 @@ server <- function(input, output,session) {
   })
   
 
-  output$map2 <- renderLeaflet({
+  output$map2 <- renderPlot({
     
-    if(input$Year == "2008-2022"){            
-      map2_data <- read_csv("data/vic_hist_hotspot.csv")%>%
-        mutate(date = as.Date(datetime))%>%
-        mutate(obsTime = as_datetime(datetime))%>%
-        mutate(obsTime = as.POSIXct(obsTime))%>%
-        extract(geometry, c('lon', 'lat'), '\\((.*), (.*)\\)', convert = TRUE)
-    }                                        
+    if(input$Year == "2021-2022"){            
+      map2_data <- read_csv("data/hotspot_2021_2022.csv")%>%
+        mutate(start_time = as_datetime("2021-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
+    }
+    
     else if(input$Year == "2009-2010"){            
-      map2_data <- read_csv("data/hotspot_2009_2010.csv")
+      map2_data <- read_csv("data/hotspot_2009_2010.csv")%>%
+        mutate(start_time = as_datetime("2009-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     }                                        
     else if(input$Year == "2010-2011"){            
-      map2_data <- read_csv("data/hotspot_2010_2011.csv")
+      map2_data <- read_csv("data/hotspot_2010_2011.csv")%>%
+        mutate(start_time = as_datetime("2010-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2011-2012"){            
-      map2_data <- read_csv("data/hotspot_2011_2012.csv")
+      map2_data <- read_csv("data/hotspot_2011_2012.csv")%>%
+        mutate(start_time = as_datetime("2011-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2012-2013"){            
-      map2_data <- read_csv("data/hotspot_2012_2013.csv")
+      map2_data <- read_csv("data/hotspot_2012_2013.csv")%>%
+        mutate(start_time = as_datetime("2012-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2013-2014"){            
-      map2_data <- read_csv("data/hotspot_2013_2014.csv")
+      map2_data <- read_csv("data/hotspot_2013_2014.csv")%>%
+        mutate(start_time = as_datetime("2013-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2014-2015"){            
-      map2_data <- read_csv("data/hotspot_2014_2015.csv")
+      map2_data <- read_csv("data/hotspot_2014_2015.csv")%>%
+        mutate(start_time = as_datetime("2014-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2015-2016"){            
-      map2_data <- read_csv("data/hotspot_2015_2016.csv")
+      map2_data <- read_csv("data/hotspot_2015_2016.csv")%>%
+        mutate(start_time = as_datetime("2015-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2016-2017"){            
-      map2_data <- read_csv("data/hotspot_2016_2017.csv")
+      map2_data <- read_csv("data/hotspot_2016_2017.csv")%>%
+        mutate(start_time = as_datetime("2016-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2017-2018"){            
-      map2_data <- read_csv("data/hotspot_2017_2018.csv")
+      map2_data <- read_csv("data/hotspot_2017_2018.csv")%>%
+        mutate(start_time = as_datetime("2017-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2018-2019"){            
-      map2_data <- read_csv("data/hotspot_2018_2019.csv")
+      map2_data <- read_csv("data/hotspot_2018_2019.csv")%>%
+        mutate(start_time = as_datetime("2018-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2019-2020"){            
-      map2_data <- read_csv("data/hotspot_2019_2020.csv")
+      map2_data <- read_csv("data/hotspot_2019_2020.csv")%>%
+        mutate(start_time = as_datetime("2019-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
     else if(input$Year == "2020-2021"){            
-      map2_data <- read_csv("data/hotspot_2020_2021.csv")
+      map2_data <- read_csv("data/hotspot_2020_2021.csv")%>%
+        mutate(start_time = as_datetime("2020-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     } 
-    else if(input$Year == "2021-2022"){            
-      map2_data <- read_csv("data/hotspot_2021_2022.csv")
-    }
+
     else if(input$Year == "2008-2009"){            
-      map2_data <- read_csv("data/hotspot_2008_2009.csv")
+      map2_data <- read_csv("data/hotspot_2008_2009.csv")%>%
+        mutate(start_time = as_datetime("2008-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
     }
+    
+    map2_data$since_start_time<-round(map2_data$since_start_time,0)
+    
+    plot <- ggplot() + 
+      geom_density_2d_filled(data=map2_data, aes(x=lon, y=lat)) +
+      geom_sf(data = vic_map, colour="white", fill=NA) +
+      xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+      scale_fill_grey() +
+      theme_map() +
+      theme(legend.position="none")+
+      geom_point(map2_data %>% dplyr::filter(since_start_time == input$Hours), 
+                 mapping=aes(x=lon, y=lat), 
+                 colour="orange") 
+    
+    plot
+    
     
     # map2_data2 <- map2_data %>%
     #   mutate(month_day = str_sub(date,6,10))%>%

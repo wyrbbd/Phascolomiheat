@@ -530,4 +530,108 @@ vic_data <- read.csv("./vic_data.csv")%>%
   filter("2015-10-01"<= date)
 ```
 
+```{r}
+test <- read_csv("data/hotspot_2008_2009.csv")
+```
+
+```{r}
+test2 <- test%>%
+  mutate(start_time = as_datetime("2008-10-01 00:00:00"))%>%
+  mutate(since_start_time = as.numeric(obsTime - start_time,units = "hours",digits = 0))
+```
+
+```{r}
+test2$since_start_time<-round(test2$since_start_time,0)
+```
+
+```{r}
+bkgd_map <- ggplot() + 
+      geom_density_2d_filled(data=test2, aes(x=lon, y=lat)) +
+      geom_sf(data = vic_map, colour="white", fill=NA) +
+      xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+      scale_fill_grey() +
+      theme_map() +
+      theme(legend.position="none")
+    # save(bkgd_map, file="bkgd_map.rda")  
+    # 
+    # load("bkgd_map.rda")
+    
+    plot<- bkgd_map +
+      geom_point(test2 %>% dplyr::filter(since_start_time ==2893), 
+                 mapping=aes(x=lon, y=lat), 
+                 colour="orange") 
+    plot
+```
+
+```{r}
+map2_data <- read_csv("data/hotspot_2008_2009.csv")%>%
+        mutate(start_time = as_datetime("2008-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "hours"))
+map2_data$since_start_time<-round(map2_data$since_start_time,0)
+```
+
+```{r}
+plot <- ggplot() + 
+      geom_density_2d_filled(data=map2_data, aes(x=lon, y=lat)) +
+      geom_sf(data = vic_map, colour="white", fill=NA) +
+      xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+      scale_fill_grey() +
+      theme_map() +
+      theme(legend.position="none")+
+      geom_point(map2_data %>% dplyr::filter(since_start_time == 701), 
+                 mapping=aes(x=lon, y=lat), 
+                 colour="orange") 
+    
+    plot
+```
+
+```{r}
+au_map <-ne_states(country = c("australia"), returnclass ="sf")%>%
+    select(state = name, geometry)
+  vic_map <- au_map%>%
+    filter(state == "Victoria")
+vic_hotspot1 <- recent_hotspot_data %>%
+      st_set_crs("WGS 84")
+    vic_map <- vic_map %>%st_set_crs("WGS 84")
+    recent_hotspot_data <- recent_hotspot_data %>%st_set_crs("WGS 84")
+    vic_hotspot2 = st_intersects(vic_map$geometry, recent_hotspot_data$geometry)
+    vic_hotspot2 = vic_hotspot1[vic_hotspot2[[1]],]
+
+warning_data <- vic_hotspot2%>%
+       select(latitude,temp_kelvin,datetime,longitude,
+              satellite,confidence,australian_state,geometry)
+     warning_data$datetime <- str_replace(warning_data$datetime,"T"," ")
+     warning_data$datetime <- str_replace(warning_data$datetime,"Z"," ")
+     warning_data$datetime <- as_datetime(warning_data$datetime)
+     warning_data2 <- warning_data %>%
+       mutate(time = as.numeric(Sys.time() - datetime,units = "mins"))%>%
+       filter(time <= 20)
+     
+```
+
+
+```{r}
+result <- hotspot_cluster(warning_data,
+                               lon = "longitude",
+                               lat = "latitude",
+                               obsTime = 'datetime',
+                               activeTime = 24,
+                               adjDist = 3000,
+                               minPts = 4,
+                               minTime = 3,
+                               ignitionCenter = "mean",
+                               timeUnit = "h",
+                               timeStep = 1
+     )
+result_numbership <- max(result$ignition$membership)
+```
+
+```{r}
+result_numbership
+```
+
+
+
+
+
 

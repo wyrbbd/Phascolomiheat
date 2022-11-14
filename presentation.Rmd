@@ -1,5 +1,5 @@
 ---
-title: "Bushfires"
+title: "Application to bushfires in Victoria"
 subtitle: "ETC5543"  
 author: "Yiru Wang (30898064)"
 date: '`r Sys.Date()`'
@@ -72,6 +72,9 @@ library(scales)
 library(leaflet)
 library(here)
 library(lubridate)
+library(rnaturalearth)
+library(DT)
+library(ggthemes)
 ```
 
 ```{r xaringan-animate-css, echo=FALSE}
@@ -84,19 +87,34 @@ xaringanExtra::use_panelset()
 .panelset[
 
   .panel[.panel-name[Motivation]
-### A little bit of background information about bushfire (the website: disadvantage)
-xxxxxxxxx
+
+### Digital Earth Australia Hotspots Website
+
+- https://hotspots.dea.ga.gov.au/
+
+### disadvantages
+
+- No access to historical hotspots and bushfires.
+
+- Expertise is required to judge new fires.
+
   ]
 
   .panel[.panel-name[Data description]
-### Data used in our analysis(the variables),how we got the data
-xxxxxxxx
+  
+### Recent Hotspots Data (72 hours)
+
+- https://hotspots.dea.ga.gov.au/data/recent-hotspots.json
+
+### Historical Hotspots Data
+
+- https://ga-sentinel.s3-ap-southeast-2.amazonaws.com/historic/all-data-csv.zip
+
   ]
 
 ]
 
 
-.footnote[Note: data sources and packages used are available at the end of the slides]
 
 ---
 class: animated, rotateInDownLeft
@@ -106,18 +124,20 @@ class: animated, rotateInDownLeft
 #### Current hotspots 
 
 .box-blue[
-- clustering
-- visualization and warning
-- data table
+- Live Hotspot Map
+- Clustering and warning
+- Data table
+- User guidance
 ]
 
 #### Historical hotspots
 
 .box-blue[
 
-- time selection
-- visualization
-- data table
+- Fire season hotspots and fire maps
+- Single day hotspot distribution map
+- Data table
+- User guidance
 
 ]
 
@@ -134,63 +154,166 @@ class: animated, rotateInDownLeft
 
 .panelset[
 
-  .panel[.panel-name[clustering]
+  .panel[.panel-name[Live Hotspot Map]
   
-```{r, fig.height=3}
+```{r, fig.height=7}
+au_map <-ne_states(country = c("australia"), returnclass ="sf")%>%
+    select(state = name, geometry)
+  vic_map <- au_map%>%
+    filter(state == "Victoria")
+recent_hotspot_data_1 <- geojsonsf::geojson_sf("https://hotspots.dea.ga.gov.au/data/recent-hotspots.json")
+  vic_hotspot1_1 <- recent_hotspot_data_1 %>%
+    st_set_crs("WGS 84")
+  vic_map <- vic_map %>%st_set_crs("WGS 84")
+  recent_hotspot_data_1 <- recent_hotspot_data_1 %>%st_set_crs("WGS 84")
+  vic_hotspot2_1 = st_intersects(vic_map$geometry, recent_hotspot_data_1$geometry)
+  vic_hotspot2_1 = vic_hotspot1_1[vic_hotspot2_1[[1]],]
+  hotspot_show1 <- vic_hotspot2_1%>%
+    filter(confidence > 50)
+  hotspot_show1$hours_since_hotspot_class <- cut(hotspot_show1$hours_since_hotspot,
+                                                  breaks = c(0,2,6,24,48,72),
+                                                  labels =c("0-2","2-6","6-24","24-48","48-72"))
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"T"," ")
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"Z"," ")
+  hotspot_show1$datetime <- as_datetime(hotspot_show1$datetime) + dhours(10)
 
+pals = colorFactor(palette =c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
+                     levels = c("0-2","2-6","6-24","24-48","48-72"))
+  
+  leaflet() %>%
+    setView(145,-30,zoom = 5)%>%
+    # add different provider tiles
+    addProviderTiles(
+      "OpenStreetMap",
+      # give the layer a name
+      group = "OpenStreetMap"
+    ) %>%
+    addProviderTiles(
+      "Stamen.Toner",
+      group = "Stamen.Toner"
+    ) %>%
+    addProviderTiles(
+      "Stamen.Terrain",
+      group = "Stamen.Terrain"
+    ) %>%
+    addProviderTiles(
+      "Esri.WorldStreetMap",
+      group = "Esri.WorldStreetMap"
+    ) %>%
+    addProviderTiles(
+      "Wikimedia",
+      group = "Wikimedia"
+    ) %>%
+    addProviderTiles(
+      "CartoDB.Positron",
+      group = "CartoDB.Positron"
+    ) %>%
+    addProviderTiles(
+      "Esri.WorldImagery",
+      group = "Esri.WorldImagery"
+    ) %>%
+    # add a layers control
+    addLayersControl(
+      baseGroups = c(
+        "Esri.WorldImagery", "Stamen.Toner",
+        "Stamen.Terrain", "Esri.WorldStreetMap",
+        "Wikimedia", "CartoDB.Positron","OpenStreetMap"
+      ),
+      # position it on the topleft
+      position = "topleft"
+    )%>%
+      addCircleMarkers(
+        data = hotspot_show1,
+        radius = 4,
+        color  = ~pals(hours_since_hotspot_class),
+        fillOpacity = 1,
+        # create custom labels
+        label = paste(
+          "Time: ", hotspot_show1$datetime, "<br>",
+          "Hours: ",hotspot_show1$hours_since_hotspot,  "<br>",
+          "Satellite:",hotspot_show1$satellite_operating_agency
+        ) %>%
+          lapply(htmltools::HTML)
+      ) %>%
+      # add a legend
+      addLegend(
+        colors = c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
+        labels = c("0 - 2 hours","2 - 6 hours","6 - 24 hours","24 - 48 hours","48 - 72 hours"),
+        title = "Hours",
+        opacity = 1, 
+        position = "bottomleft")
 ```
 
-- introduce spotoroo
-           
-- how we cluster the data
-           
+
    
   ]
 
 
- .panel[.panel-name[visualization]
+ .panel[.panel-name[Clustering and warning]
  
   .pull-left[
   
-```{r, fig.height=4, fig.width=5}
+![](www/check.png)
 
-```
+![](www/check_pop.png)
 
 ]
 
  .pull-right[
  
-- map type
+### Clustering: Spotoroo Algorithms
            
-- hours
+- The maximum intra-cluster spatial distance is 3km
            
-- hotspots detail
+- The length of time between successive time indexes is 1 hour
 
-- how warning work 
-    
+### Checking For New Fires
+
+-  Check if a new fire has appeared since the application was opened
+
+- A warning message pops up
+
+
   ]       
   
   ]
   
- .panel[.panel-name[data table]
+ .panel[.panel-name[Data table]
  
-  .left-column[
 
-- sort and search
+- Sort And Search
            
-- download
+- Download (Excel,Pdf,Csv)
 
-]
- 
-  .right-column[
     
-```{r, fig.height=4.5}
-
+```{r}
+data_table <- hotspot_show1%>%
+  as.data.frame()%>%
+  select(latitude,longitude,datetime,hours_since_hotspot,confidence)
+datatable(data_table,
+              rownames = FALSE,
+              filter = 'top',
+              caption = "Table 1: Recent VIC Hotspots",
+              extensions = 'Buttons',
+              options = list(dom = 'Bfrtip',
+                             buttons = c('csv','excel','pdf')))
 ```
     
-  ]
    
   ]
+  
+  .panel[.panel-name[User guidance]
+  
+- Click on the pop-up message
+
+![](www/press.png)
+  
+![](www/user1.png)
+
+           
+   
+  ]
+
   
 ]
 
@@ -203,32 +326,54 @@ layout: false
 ---
 class: animated, rotateInDownLeft
 
-
-```{r}
-
-```
-
 .panelset[
 
-  .panel[.panel-name[time selection]
+  .panel[.panel-name[Fire season hotspots and fire maps]
   
-```{r, fig.height=3}
+.pull-left[
+  
+![](www/2019_2020.gif)
 
-```
+]
 
-- xxxxxxx
+ .pull-right[
+ 
+### Year selection
            
-- xxxxxxx
+- Default shows 2021 to 2022 fire season
            
-   
+- Select range 2008-2022
+
+![](www/year.png)
+
+
+### Clustering
+
+- Different colours represent different bushfires after analysis
+
+    
+  ]       
+  
   ]
 
 
- .panel[.panel-name[visualization]
+ .panel[.panel-name[Single day hotspot distribution map]
  
   .pull-left[
   
 ```{r, fig.height=4, fig.width=5}
+d <- read_csv("data/hotspot_2019_2020.csv")
+ggplot() + 
+  geom_density2d_filled(data=d, aes(x=lon, y=lat)) +
+  geom_sf(data = vic_map, colour="white", fill=NA) +
+  xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+  scale_fill_grey() +
+  theme_map() +
+  theme(legend.position="none")+
+  geom_point(d %>% dplyr::filter(date==as.Date("2019-12-21")), 
+             mapping=aes(x=lon, y=lat), 
+             colour="orange") 
+
 
 ```
 
@@ -236,33 +381,54 @@ class: animated, rotateInDownLeft
 
  .pull-right[
  
-- xxxxxxxxxx
+### Time selection
            
-- xxxxxxxx
+- Year time varies according to the previous chart
            
-- xxxxxxxx
+- The slider indicates the number of days since the start of the fire season
+
+![](www/day.png)
+
+### Density map
+
+- Shows the distribution of hotspots throughout the year for the selected year
     
   ]       
   
   ]
   
- .panel[.panel-name[data table]
+ .panel[.panel-name[Data Table]
  
-  .left-column[
 
-- xxxxxxx
+- Sort And Search
            
-- xxxxxxx
+- Download (Excel,Pdf,Csv)
 
-]
- 
-  .right-column[
     
-```{r, fig.height=4.5}
+```{r}
+datatable_data <- read_csv("data/hotspot_2017_2018.csv")
+
+    datatable(datatable_data,
+              rownames = FALSE,
+              filter = 'top',
+              caption = "Table 2: Historical Hotspots",
+              extensions = 'Buttons',
+              options = list(dom = 'Bfrtip',
+                             buttons = c('copy','csv','excel','pdf')))
 
 ```
     
+   
   ]
+  .panel[.panel-name[User guidance]
+  
+- Click on the pop-up message
+
+![](www/press.png)
+  
+![](www/user2.png)
+
+           
    
   ]
   
@@ -271,13 +437,28 @@ class: animated, rotateInDownLeft
 ---
 class: animated, bounceInDown
 
+# 💻 Application
+
+<video width="800" height="550" controls>
+  <source src="www/video.mp4" type="video/mp4">
+</video>
+
+---
+class: animated, bounceInDown
+
 # 😖 Challenges
 
-- xxxxxx
+### 1. Data Cleaning
 
-- xxxxxxxx
+- Computer performance
 
-- xxxxxxx
+- Big Data
+
+- Missing value
+
+### 2. Code optimisation
+
+- Slow running applications
 
 
 ---
@@ -285,11 +466,13 @@ class: animated, bounceInDown
 
 # 📌 Learning outcome
 
-- xxxxxx
+### 1. New packages
 
-- xxxxxxxx
+- ggthemes,rintrojs...
 
-- xxxxxxx
+### 2. The importance of clustering
+
+### 3. Ability to think and learn independently
 
 
 ---
@@ -297,51 +480,32 @@ class: animated, bounceInDown
 
 # 🤔 Future Considerations
 
-- xxxxxx
+### Data cleaning optimisation
 
-- xxxxxxxx
+- Power
 
-- xxxxxxx
+- Confidence
+
+### Optimisation of hotspot judgements
+
+- Power
+
+- Confidence
 
 
 ---
 
-class: animated, fadeIn
+class: middle,animated, fadeIn
 
-<center><img src="https://retailpharmacymagazine.com.au/wp-content/uploads/2020/05/Rb-health-thanks-pharmacist-retail-pharmacy-696x392.jpg" height="300px" /></center>
+<center><img src="https://retailpharmacymagazine.com.au/wp-content/uploads/2020/05/Rb-health-thanks-pharmacist-retail-pharmacy-696x392.jpg" height="500px" /></center>
 
-
-.pull-left[
-#### Slides are created using the following R packages:
-
-[xaringan](https://github.com/yihui/xaringan)<br>
-[gadenbuie/xaringanthemer](https://github.com/gadenbuie/xaringanthemer)<br>
-[xaringanExtra](https://github.com/gadenbuie/xaringanExtra/)<br>
-[tidyverse](https://www.tidyverse.org/)<br>
-[plotly](https://www.rdocumentation.org/packages/plotly/versions/4.5.2)<br>
-[hrbrthemes](http://github.com/hrbrmstr/hrbrthemes)<br>
-[sf](https://www.rdocumentation.org/packages/sf/versions/0.1-1)<br>
-[scales](https://CRAN.R-project.org/package=scales)<br>
-[leaflet](https://CRAN.R-project.org/package=leaflet)
-
-]
-
-.pull-right[
-
-#### Data sources: 
-
-[Victorian COVID-19 data](https://www.coronavirus.vic.gov.au/victorian-coronavirus-covid-19-data) <br> 
-[Local Government Area Boundaries (Road) (polygon) - Vicmap Admin](https://datashare.maps.vic.gov.au/search?q=bc822a9c-3766-57ac-a034-bcad3fb66d86)<br>
-[Australian COVID-19 data](https://github.com/M3IT/COVID-19_Data) <br>
-[Victoria unknown cases data](https://www.covid19data.com.au/)<br>
-[Australia COVID-19 data - GitHub](https://github.com/M3IT/COVID-19_Data)<br>
-[Weekly COVID-19 vaccine data](https://www.coronavirus.vic.gov.au/weekly-covid-19-vaccine-data)
-
-]
 
 
 ---
 class: middle, animated, rotateInDownLeft
 
 <center><img src="https://memegenerator.net/img/instances/80187761.jpg" height="500px" /></center>
+
+
+
 
