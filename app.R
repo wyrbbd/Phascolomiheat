@@ -181,19 +181,25 @@ server <- function(input, output,session) {
   hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"Z"," ")
   hotspot_show1$datetime <- as_datetime(hotspot_show1$datetime) + dhours(10)
   
-  result <- hotspot_cluster(hotspot_show1,
-                            lon = "longitude",
-                            lat = "latitude",
-                            obsTime = 'datetime',
-                            activeTime = 24,
-                            adjDist = 3000,
-                            minPts = 4,
-                            minTime = 3,
-                            ignitionCenter = "mean",
-                            timeUnit = "h",
-                            timeStep = 1
-  )
-  result_numbership <- max(result$hotspots$membership)
+  if(nrow(hotspot_show1)< 200){            
+    result_numbership = 0
+  }                                        
+  else if(nrow(hotspot_show1) > 200){            
+    result <- hotspot_cluster(hotspot_show1,
+                              lon = "longitude",
+                              lat = "latitude",
+                              obsTime = 'datetime',
+                              activeTime = 24,
+                              adjDist = 3000,
+                              minPts = 4,
+                              minTime = 3,
+                              ignitionCenter = "mean",
+                              timeUnit = "h",
+                              timeStep = 1
+    )
+    result_numbership <- max(result$hotspots$membership)
+  } 
+  
   
   pals = colorFactor(palette =c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
                      levels = c("0-2","2-6","6-24","24-48","48-72"))
