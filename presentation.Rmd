@@ -492,6 +492,8 @@ class: animated, bounceInDown
 
 - Confidence
 
+### Automatic checking for new bushfires and automatic pop-up warnings
+
 
 ---
 

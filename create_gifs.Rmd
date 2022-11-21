@@ -154,8 +154,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -200,8 +200,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -247,8 +247,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -294,8 +294,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -341,9 +341,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
-
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 animate(p,fps = 5)
 anim_save(filename = '2012_2013.gif',path = "./www/")
@@ -388,8 +387,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -435,8 +434,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -481,8 +480,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -527,9 +526,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
-
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 animate(p,fps = 5)
 anim_save(filename = '2016_2017.gif',path = "./www/")
@@ -573,9 +571,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
-
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 animate(p,fps = 5)
 anim_save(filename = '2017_2018.gif',path = "./www/")
@@ -618,8 +615,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -664,8 +661,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)
@@ -709,8 +706,8 @@ p = ggplot(result_data) +
   theme(legend.position="none")+
   geom_point(mapping = aes(x = lon, y = lat,color = membership)
              , alpha = 0.2)+
-  transition_states(obsTime) +
-  labs(title = 'Time: {closest_state}',size = 12)
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
 
 
 animate(p,fps = 5)

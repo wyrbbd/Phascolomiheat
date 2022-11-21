@@ -151,10 +151,10 @@ server <- function(input, output,session) {
   
   t <- reactive({
     
-    hotspot_show <- data_now()
-    # %>%
-    #   filter(confidence > 50)%>%
-    #   filter(power>6)
+    hotspot_show <- data_now()%>%
+      filter(confidence > 49)%>%
+      filter(power>10)%>%
+      filter(temp_kelvin >300)
     hotspot_show$hours_since_hotspot_class <- cut(hotspot_show$hours_since_hotspot,
                                                   breaks = c(0,2,6,24,48,72),
                                                   labels =c("0-2","2-6","6-24","24-48","48-72"))
@@ -173,10 +173,10 @@ server <- function(input, output,session) {
   recent_hotspot_data_1 <- recent_hotspot_data_1 %>%st_set_crs("WGS 84")
   vic_hotspot2_1 = st_intersects(vic_map$geometry, recent_hotspot_data_1$geometry)
   vic_hotspot2_1 = vic_hotspot1_1[vic_hotspot2_1[[1]],]
-  hotspot_show1 <- vic_hotspot2_1
-  # %>%
-  #   filter(confidence > 50)%>%
-  #   filter(power>6)
+  hotspot_show1 <- vic_hotspot2_1%>%
+    filter(confidence > 49)%>%
+    filter(power>10)%>%
+    filter(temp_kelvin >300)
   hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"T"," ")
   hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"Z"," ")
   hotspot_show1$datetime <- as_datetime(hotspot_show1$datetime) + dhours(10)
@@ -251,7 +251,9 @@ server <- function(input, output,session) {
         label = paste(
           "Time: ", t()$datetime, "<br>",
           "Hours: ",t()$hours_since_hotspot,  "<br>",
-          "Satellite:",t()$satellite_operating_agency
+          "Satellite:",t()$satellite_operating_agency,  "<br>",
+          "Power:",t()$power,  "<br>",
+          "Temp:",t()$temp_kelvin
         ) %>%
           lapply(htmltools::HTML)
       ) %>%
@@ -280,21 +282,27 @@ server <- function(input, output,session) {
      #   filter(time <= 20)
      # warning_data2
      
-     result2 <- hotspot_cluster(warning_data,
-                               lon = "longitude",
-                               lat = "latitude",
-                               obsTime = 'datetime',
-                               activeTime = 24,
-                               adjDist = 3000,
-                               minPts = 4,
-                               minTime = 3,
-                               ignitionCenter = "mean",
-                               timeUnit = "h",
-                               timeStep = 1
-     )
      
-      new_result_numbership <- max(result2$hotspots$membership)
-      check_warning <- new_result_numbership - result_numbership
+     if(nrow(warning_data)< 200){            
+       check_warning = 0
+     }                                        
+     else if(nrow(warning_data) > 200){            
+       result2 <- hotspot_cluster(warning_data,
+                                  lon = "longitude",
+                                  lat = "latitude",
+                                  obsTime = 'datetime',
+                                  activeTime = 24,
+                                  adjDist = 3000,
+                                  minPts = 2,
+                                  minTime = 3,
+                                  ignitionCenter = "mean",
+                                  timeUnit = "h",
+                                  timeStep = 1
+       )
+       new_result_numbership <- max(result2$hotspots$membership)
+       check_warning <- new_result_numbership - result_numbership
+     } 
+
       check_warning
       
       })
@@ -360,10 +368,7 @@ server <- function(input, output,session) {
  
   output$history <- renderUI({
     
-    if(input$Year == "2008-2022"){            
-      img(height =600, width = 700,src = "all.gif")
-    }                                        
-    else if(input$Year == "2009-2010"){            
+    if(input$Year == "2009-2010"){            
       img(height =600, width = 700,src = "2009_2010.gif")
     }                                        
     else if(input$Year == "2010-2011"){            
