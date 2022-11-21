@@ -97,12 +97,12 @@ The data analysis below is based on map data for Victoria, Australia, sourced fr
 ### 72-hour hotspot data
 
 This data was sourced from the Digital Earth Australia hotspot website and can be downloaded by clicking here. The data has 24 variables, as shown below
-latitude - the latitude of the hotspot is based on WGS84 (º) at the centre of the pixel.
-orbit - Orbit Number - the orbit number is determined using the information provided in the NORAD TLE file. the determination is made and the information is provided in the NORAD TLE file.
 
 ```{r}
 tribble(
   ~Variable, ~Meaning,
+  "latitude","the latitude of the hotspot is based on WGS84 (º) at the centre of the pixel.",
+  "orbit","rbit Number - the orbit number is determined using the information provided in the NORAD TLE file. the determination is made and the information is provided in the NORAD TLE file.",
   "stop_dt",   "the time at which the satellite was unable to observe the data  ",
   "Id",   "numeric ID assigned to the hotspot ",
   "filename",    "the file where the data is located",
