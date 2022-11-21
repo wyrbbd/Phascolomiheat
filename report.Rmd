@@ -1,0 +1,515 @@
+---
+title: |
+  <br>**Victorian bushfire hotspot application**
+author: |
+  | Author: Yiru Wang 
+  | Supervisor: Dianne Cook
+date: "22/11/2022"
+output:
+  bookdown::html_document2:
+    css: "style.css"
+    toc: true
+    toc_float: true
+    number_sections: false
+---
+
+```{r setup, include = FALSE, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE, 
+  collapse = TRUE,
+  comment = "#",
+  # fig.height = 4,
+  # fig.width = 8,
+  fig.align = "center",
+  cache = FALSE
+  )
+```
+
+```{r packages, include = FALSE, echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(sf)
+library(DT)
+library(furrr)
+library(lubridate)
+library(rnaturalearth)
+library(dplyr)
+library(geojsonsf)
+library(gganimate)
+library(leaflet)
+library(formattable)
+library(cranlogs)
+library(ggthemes)
+library(spotoroo)
+library(kableExtra)
+```
+
+
+# Abstract
+
+The application is based on various data to determine whether a hotspot is an ongoing bushfire or a new bushfire, using a cluster analysis algorithm to differentiate the judgment. Research and attempts in this area are shown here, covering the determination of past hotspots and the visualization of the results. The current fire warning and historical fire review systems for people shown in the report could be developed as a new capability for Australia. For the accuracy of the clustering analysis and the accuracy of the fire judgments, the current hotspot dataset is calibrated to be consistent with the historical dataset based on geographic location, matching time, and confidence level. This application discusses the 2008-2022 fire season in Victoria, Australia, and provides guidance on how to use this application, including for new bushfire alerts. These fire data are now available in a consistent form going back to the 2008 historical record, but the data for the new year's fire season is not traceable at this time.
+
+<br>
+
+# Background
+
+Bushfires are known by different names around the world and are also referred to as wildfires, forest fires, vegetation fires, or bushfires. For the purposes of this article, we will use the term bushfire (mainly used in Australia) to refer to fires that occur anywhere on grass, bush or forest. (DENNEKAMP, M. and ABRAMSON, M.J. 2011) Bushfires often cause huge amounts of damage and are something that no country wants to see. Australia is one of the most fire-prone environments on the planet, largely due to its fire-friendly weather and fuel conditions.
+
+Bushfires have caused significant impacts and losses in Australia in all aspects of life, livestock and agriculture. According to statistics, the total annual loss from bushfires in Australia is over $8.4 billion, almost 1.15% of the national GDP (Ashe et al., 2009)). billion Australian dollars. Other forms of damage include natural resources, ecology, and the resulting severe and lasting negative psychological impact on firefighters and local residents (Thomson 2013).
+
+Victoria is one of the most fire-prone regions in Australia. For many years, Victoria, which covers only 3% of the country, has sustained approximately 50% of the economic losses from bushfires across Australia (McGee & Russell 2003). Every year Victoria has a high bushfire season from October to March, with a new bushfire occurring almost every month.
+
+It is almost impossible to completely eliminate bushfires, but we can minimize the damage they cause. It is particularly important that bushfires are detected and dealt with in a timely manner and that areas with a high incidence of bushfires are controlled in advance. Effective and timely early warning can help firefighters to pinpoint areas of fire and extinguish them quickly and accurately, thus minimizing damage.
+
+Currently, Victoria does not have a product to provide this service. The government has a digital remote sensing hotspot display website, but it does not cluster the data, which requires a certain level of user expertise to determine the occurrence of new bushfires.
+
+
+<br>
+
+# Objectives and significance
+
+The purpose of this presentation is to showcase the research work done by Yiru Wang on the Victorian bushfire shiny app in Australia as part of her placement in the ETC5543 Business Analytics Creative Activities course. The focus of this work was on the research and exploration of hotspots in Victoria, based on Patrick Li's paper entitled "Using remote sensing data to understand fire ignition in Victoria for the 2019-2020 Australian bushfire season" (Li 2020), in an extension of the research done by Di Cook and Patrick Li on hotspot clustering algorithms.
+
+The overall objective of this work was to develop a Shiny web application to monitor current fire conditions in Victoria, Australia, as well as historical fire occurrences, including an automated warning window developed for monitoring the current Victorian bushfire season, where users would be alerted to new fires that occur during the period of use. The objectives of the project are divided into two main sections, the display of current hotspots, fire warnings, and the analysis of historical hotspots. These objectives are achieved through the following.
+
+-  Part 1: Implementing a link between the application and the official website data to enable timely updating of data and display of current hotspots. Cluster analysis is used to determine if a hotspot is a bushfire and to automatically pop up warning messages when new bushfires appear.
+
+- Part 2: Review historical hotspot data, perform cluster analysis on the hotspot data and explore the distribution of hotspots for that fire season and the distribution of hotspots by day, and visualize the results. Users can search for fire season hotspots from 2008 to 2022, and query and download the data
+
+The application is designed to provide quick access to current bushfire information, improve the speed of response to bushfires and reduce the need for user expertise to better assist users in accessing information. The GitHub repository used including Patrick's paper can be found here.
+
+<br>
+
+# Data and methodology
+
+## Data sources
+
+The data used in this project consisted of three separate datasets, 72 hours of Australian hotspot data, Australian map data, and Australian historical hotspot data from 2002-2022. The data cleaning process involved was complex and included cleaning column names, creating new time variables, changing the time variable time zone, and removing unnecessary characters. Some missing values are meaningful, as described in the following paragraphs.
+
+The study also focused only on the October to March bushfire season, as most fires occur during these periods. The data dates are from 2008 to 2022. There is a trade-off in the period of data used - the data must be long enough to capture temporal variation, but not so long as to ignore changes in the data, such as climate change or anthropogenic spatial variation in ignition patterns. (Parisien et al. (2005))
+
+### Map of Victoria, Australia
+
+The data analysis below is based on map data for Victoria, Australia, sourced from the Australian map data in the R package rnaturalearth. The package is supplied with the downloaded world map data and its subsets, which can be differentiated by country and region. The R package also allows for the download of additional Natural Earth vector and raster data consistent with Natural Earth's naming convention, and users can use Natural Earth documentation alongside this package. All map data is presented in 'sf' or 'sp' format.
+
+### 72-hour hotspot data
+
+This data was sourced from the Digital Earth Australia hotspot website and can be downloaded by clicking here. The data has 24 variables, as shown below
+latitude - the latitude of the hotspot is based on WGS84 (º) at the centre of the pixel.
+orbit - Orbit Number - the orbit number is determined using the information provided in the NORAD TLE file. the determination is made and the information is provided in the NORAD TLE file.
+
+```{r}
+tribble(
+  ~Variable, ~Meaning,
+  "stop_dt",   "the time at which the satellite was unable to observe the data  ",
+  "Id",   "numeric ID assigned to the hotspot ",
+  "filename",    "the file where the data is located",
+  "process_algorithm ", "The name of the algorithm used to produce Hotspots",
+  "process_algorithm_version","Algorithm version used to process the Hotspot",
+  "process_dt","Date and time (in UTC) that the Hotspot was processed ",
+  "temp_kelvin","A set of detection criteria developed to detect the presence of a hotspot.The temperature of the difference between a fire pixel and its background based on the absolute detection of the fire and the detection of the difference between the fire pixel and its background relative to the difference between the fire pixel and its background in degrees Kelvin",
+  "Datetime","Time of acquisition for the data in which the Hotspot was detected (UTC). ",
+  "product","Name of the product within the database",
+  "start_dt","The time when the satellite started observing the hotspot.",
+  "load_dt","Date and time that the Hotspot was loaded into the database",
+  "longitude","The longitude of the Hotspot is based on the pixel centre of WGS84",
+  "Power","Estimate of Fire Radiated Power (FRP) of MODIS Hotspot pixel. in these cases, null values, or (-1) are displayed.",
+  "satellite","Name of the satellite platform using the National Space Science Data Centre unique satellite number",
+  "hours_since_hotspot","time since the hotspot was observed",
+  "confidence","the confidence level of the MOD14 fire detection algorithm that the hotspot is a fire, we only select those above 50",
+  "australian_state","the location of the state in which the hotspot is located, null values exist",
+  "geometry","the location of the hotspot pixels"
+) %>% 
+  kable(caption = "72-hour hotspot data") %>% 
+  kable_styling(full_width = FALSE) %>% 
+  footnote(general = "Digital Earth Australia Hotspots",
+           general_title = "Source:",
+           footnote_as_chunk = TRUE)
+```
+
+
+This data is updated in real-time, but there is a 17-minute delay in the most ideal state data due to delays in reading satellite data. Hotspots are likely to be affected by clouds and other factors resulting in them not being monitored. Some hotspots may not be bushfires or fires but may be industrial furnaces etc.
+
+### Historical hotspot data for Australia 2002-2022
+This data comes from the staff of the government website mentioned above and covers recorded hotspot data for Australia from 2002 to 2022. The data has 21 variables and over 28 million data items, most of which are the same as the variables above, with the exception of the Geometry variable. age_hours has the same meaning as hours_since_hotspot in the 72 hour data. As the data is from staff, it is currently up to August 2022.   
+
+## Hotspot data processing
+As the main focus of this project is on Victoria, Australia, both the 72-hour data and the historical data needed to be cleaned, i.e. extracted for Victoria. Although there is a variable in both data about the state to which the data belongs, this variable has missing values and much of the data would be lost if the state was directly selected to be displayed as VIC, so the st_intersects method was used here for processing.
+
+st_intersects can return for each data whether they intersect or not, or which elements intersect. In this study, the 72-hour data and historical data were compared with the map data of Victoria, Australia, and the intersected data extracted to obtain the Victorian hotspot data.
+
+As the 72-hour data set is in the UTC time zone and the time format is not a conventional time format, it needs to be converted to the Victorian time zone here. The str_replace function was used to remove the alphabetic characters from the DateTime. Victorian time is 10 hours faster than UTC, so the DateTime variable is increased by 10 hours. There are many time variables in the two hotspot datasets, but we only need to change the DateTime because we need the data when the satellite is directly above the hotspot. start_dt and stop_dt are both satellite critical times, which are not considered here, and DateTime is the middle value of the two times, which we can consider as the time when the satellite is passing the hotspot. It can also be considered as the time when the hotspot was discovered.
+
+The confidence variable represents the probability that the hotspot is real, and when it is 0-30, it represents a low probability. When it is between 30 and 80 it represents an average probability and if it is in the range of 80 or more it represents a high probability. This variable also has a missing value because some satellites do not have the capability to assess likelihood. In this project, we treat all missing data as 50 and then remove data with a likelihood of less than 50, so as to minimise the amount of data and remove some noise.
+
+The power variable represents the Estimate of Fire Radiated Power (FRP) of the MODIS Hotspot pixel, and normally a hotspot with a power greater than 100 would be considered a true fire point, but this variable is missing in both datasets, and some satellites do not have the capability to detect temperature, showing -1. However, the government website chose to display data in the power range of 10-240, so the same display as the government website was used in this study.
+
+Temperature (Kelvin) is a set of detection criteria developed to detect the presence of a hot spot. It is based on the absolute detection of a fire and the detection of the difference in temperature between the fire pixel and its background relative to the difference between the fire pixel and its background. The government website has chosen to display data in degrees Kelvin in the range of 300-450, so the same temperature range has been chosen for this product.
+
+
+## Methodology
+
+### Current hotspots section
+As this study is to improve the functionality of the Digital Australia Hotspot website, we have chosen to reconstruct a map of the site in terms of displaying current hotspots. This includes the geographical location of the hotspot, the power and temperature and the time since it was first discovered. As the site's JSON file does not include a variable for the time to discovery, a new variable was created to represent the time to discovery of the hotspot. Again, similar colours have been chosen to represent the hotspots at different times, based on the format of the government website. The size of the dots is uniform and does not represent the size of the power. As mentioned above, not all information on included hotspots will be displayed, only points that pass the screening process will be displayed on the map.
+
+As mentioned above, this study is intended to provide early warning information to users, so the system needs to be able to determine whether a hotspot is an already existing fire or the starting point of a new forest fire. In order to achieve this, the data first needs to be clustered and analysed to determine where the hotspots belong, and in this case, the algorithm from the spotroo package is used. spotoroo" is an algorithm for Spatio-temporal clustering of hotspot data in R. It is mainly oriented towards satellite hotspot data and helps to detect It is mainly oriented towards satellite hotspot data and helps to detect ignition points and to reconstruct the movement of fires. As this algorithm is for Spatio-temporal clustering of datasets, it is necessary to specify the spatial variables ("lon", "lat") in the data, as well as the observation time ("obsTime"), which needs to be in temporal format. Also, the algorithm has several options to choose from, as shown in the table below. In this study, the minimum number of hotspots was set to 4, the maximum spatial distance was 3km and the time unit was 1 hour. The reason for the spatial distance setting of 3km is that there is a plus or minus 1.5km error in the accuracy of the data.
+
+```{r}
+tribble(
+  ~options, ~meaning,
+  "activeTime",   "sets the possible active time of the fire, beyond which a new cluster will be created for the hotspot.",
+  "adjDist",   "sets the maximum spatial distance between the nearest hotspots, once this distance is exceeded the hotspots will be considered part of a different cluster.",
+  "minPts",    "sets the minimum number of hotspots in the cluster",
+  "ignitionCenter", "sets the method for calculating ignition points",
+  "timeUnit and timeStep","set the length of time between successive time indexes"
+) %>% 
+  kable(caption = "spotoroo options") %>% 
+  kable_styling(full_width = FALSE) %>% 
+  footnote(general = "https://github.com/TengMCing/spotoroo",
+           general_title = "Source:",
+           footnote_as_chunk = TRUE)
+
+```
+
+
+Each time the application is run, the system automatically saves a number of clusters after the cluster analysis is completed and the user interface is set with a button to check if there are new bushfire points. Every time the user clicks the button the latest data is read and a warning message pops up by determining if there are new bushfires.
+
+For user-friendliness, a user help button has been added to the interface. When the user clicks the button, the interface pops up with a help message showing the function of each section and what it represents.
+
+Considering that the user may need the raw data and explore it in a new way, the application provides the data needed to build the map and processes it using DT packages, making it possible not only to search and sort the data, but also to download it in different formats for subsequent processing.
+
+### Historical hotspots section
+For historical hotspots, people generally want to be able to see the distribution of hotspots by day and the distribution of bushfires that existed historically. To meet both needs, two areas have been divided in this section. One section is a dynamic map of the entire fire season and the other is the distribution of hotspots that can be viewed by day.
+
+For the dynamic map of the entire fire season section, a gif is used to display the dynamic map. In the graph, different colours represent different bushfires, which is the result of using a cluster analysis algorithm. The dynamogram was implemented using gganimate. Due to the large number of hotspots for each fire season, especially for 2019-2020, there are over three thousand bushfire hotspots after filtering, and it would be time consuming to re-generate the dynamogram each time it is extracted. Therefore, I chose to pre-process the dynamic maps and store them in a www file. The code for the dynamic maps can be found in create-gif.rmd. The year selection for the fire season can be selected via a drop down selection box.
+
+For the split-day hotspot data, I created a slider in the application. The slider has a head and tail of 0 and 150, representing the first and last day of the fire season start, respectively. The initial setting was to select the hour as the unit of time, but a fire season has 3600 hours, but when there are few bushfires, there may only be a few hundred hotspots for the entire fire season in Victoria, which inevitably leads to long gaps, and too many choices can make it a bad experience for the user to find exactly the time they want to observe. The background of the map is a density map of all the hotspots for that year's fire season, which helps the user to see where the worst fires were during that year's fire season, with the orange dots on the map representing the hotspots.
+
+Similarly, for the user's sense of usability, a user help button has been added to the interface. When the user clicks the button, the interface pops up with help information showing the function of each section and what it represents.
+
+Also considering that the user may need the raw data and explore it in a new way, the application provides all the data needed to build the map and process it using DT packages, allowing the user to not only search and sort the data, but also download it in different formats for subsequent processing.
+
+<br>
+
+# Analysis
+
+## Current Hotspots
+
+```{r}
+au_map <-ne_states(country = c("australia"), returnclass ="sf")%>%
+    select(state = name, geometry)
+  vic_map <- au_map%>%
+    filter(state == "Victoria")
+recent_hotspot_data_1 <- geojsonsf::geojson_sf("https://hotspots.dea.ga.gov.au/data/recent-hotspots.json")
+  vic_hotspot1_1 <- recent_hotspot_data_1 %>%
+    st_set_crs("WGS 84")
+  vic_map <- vic_map %>%st_set_crs("WGS 84")
+  recent_hotspot_data_1 <- recent_hotspot_data_1 %>%st_set_crs("WGS 84")
+  vic_hotspot2_1 = st_intersects(vic_map$geometry, recent_hotspot_data_1$geometry)
+  vic_hotspot2_1 = vic_hotspot1_1[vic_hotspot2_1[[1]],]
+  hotspot_show1 <- vic_hotspot2_1%>%
+    filter(confidence > 50)%>%
+    filter(power > 10)%>%
+    filter(temp_kelvin >300)
+  hotspot_show1$hours_since_hotspot_class <- cut(hotspot_show1$hours_since_hotspot,
+                                                  breaks = c(0,2,6,24,48,72),
+                                                  labels =c("0-2","2-6","6-24","24-48","48-72"))
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"T"," ")
+  hotspot_show1$datetime <- str_replace(hotspot_show1$datetime,"Z"," ")
+  hotspot_show1$datetime <- as_datetime(hotspot_show1$datetime) + dhours(10)
+
+pals = colorFactor(palette =c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
+                     levels = c("0-2","2-6","6-24","24-48","48-72"))
+  
+  leaflet() %>%
+    setView(145,-30,zoom = 5)%>%
+    # add different provider tiles
+    addProviderTiles(
+      "OpenStreetMap",
+      # give the layer a name
+      group = "OpenStreetMap"
+    ) %>%
+    addProviderTiles(
+      "Stamen.Toner",
+      group = "Stamen.Toner"
+    ) %>%
+    addProviderTiles(
+      "Stamen.Terrain",
+      group = "Stamen.Terrain"
+    ) %>%
+    addProviderTiles(
+      "Esri.WorldStreetMap",
+      group = "Esri.WorldStreetMap"
+    ) %>%
+    addProviderTiles(
+      "Wikimedia",
+      group = "Wikimedia"
+    ) %>%
+    addProviderTiles(
+      "CartoDB.Positron",
+      group = "CartoDB.Positron"
+    ) %>%
+    addProviderTiles(
+      "Esri.WorldImagery",
+      group = "Esri.WorldImagery"
+    ) %>%
+    # add a layers control
+    addLayersControl(
+      baseGroups = c(
+        "Esri.WorldImagery", "Stamen.Toner",
+        "Stamen.Terrain", "Esri.WorldStreetMap",
+        "Wikimedia", "CartoDB.Positron","OpenStreetMap"
+      ),
+      # position it on the topleft
+      position = "topleft"
+    )%>%
+      addCircleMarkers(
+        data = hotspot_show1,
+        radius = 4,
+        color  = ~pals(hours_since_hotspot_class),
+        fillOpacity = 1,
+        # create custom labels
+        label = paste(
+          "Time: ", hotspot_show1$datetime, "<br>",
+          "Hours: ",hotspot_show1$hours_since_hotspot,  "<br>",
+          "Satellite:",hotspot_show1$satellite_operating_agency,  "<br>",
+          "Power:",hotspot_show1$power,  "<br>",
+          "Temp:",hotspot_show1$temp_kelvin
+        ) %>%
+          lapply(htmltools::HTML)
+      ) %>%
+      # add a legend
+      addLegend(
+        colors = c("#800000","#FF0000","#FF4500","#FF8C00","#F5DEB3"),
+        labels = c("0 - 2 hours","2 - 6 hours","6 - 24 hours","24 - 48 hours","48 - 72 hours"),
+        title = "Hours",
+        opacity = 1, 
+        position = "bottomleft")
+```
+
+This map is in the leaflet style and shows hotspots that have more than a 50/50 chance of being a real fire within the current 72 hours, given the time of creation of this document. The map shows details of the hotspot, including location, temperature and the time the hotspot was observed. To make it easier for the user to observe the hotspot, the application uses a variety of maps that the user can adjust to suit their preferences for viewing.
+
+## Historical Hotspots
+
+### Hotspots during the fire season
+
+```{r}
+d <- read_csv("data/hotspot_2019_2020.csv")%>%
+  as.data.frame()
+
+result <- hotspot_cluster(d,
+  lon = "lon",
+  lat = "lat",
+  obsTime = 'obsTime',
+  activeTime = 24,
+  adjDist = 3000,
+  minPts = 4,
+  minTime = 3,
+  ignitionCenter = "mean",
+  timeUnit = "h",
+  timeStep = 1
+)
+
+result_data <- result$hotspots%>%
+  mutate(membership = as.factor(membership))
+
+result_data2 <- result_data%>%
+  select(lon,lat,membership)
+
+vic_map = ne_states(country = 'Australia', returnclass = 'sf')%>%
+  filter(name == "Victoria")
+
+p = ggplot(result_data) +
+  geom_sf(data = vic_map, fill = "#2D2C2C",colour="white") +
+  xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+  ggtitle("Monthly Average Temperature") +
+  theme_map() +
+  exit_fade() +
+  enter_fade() +
+  #theme(panel.background = element_blank())+
+  theme(legend.position="none")+
+  geom_point(mapping = aes(x = lon, y = lat,color = membership)
+             , alpha = 0.2)+
+  transition_time(obsTime) +
+  labs(title = 'Time: {frame_time}',size = 12)
+
+
+animate(p,fps = 7)
+```
+
+Using the 2019-2020 hotspots as an example, over seven thousand hotspots were categorised into over one hundred fires by clustering and analysing the historical data. The different colours represent the different fires that the hotspots belong to. The dynamic map shows that in that year there were many fires in the eastern part of Victoria and that the fires broke out between December and January.
+
+
+### Split-day historical hotspot map
+
+```{r}
+ map2_data <- read_csv("data/hotspot_2019_2020.csv")%>%
+        mutate(start_time = as_datetime("2019-10-01 00:00:00"))%>%
+        mutate(since_start_time = as.numeric(obsTime - start_time,units = "days"))
+map2_data$since_start_time<-round(map2_data$since_start_time,0)
+ggplot() + 
+      geom_density_2d_filled(data=map2_data, aes(x=lon, y=lat)) +
+      geom_sf(data = vic_map, colour="white", fill=NA) +
+      xlim(c(140, 150.5)) + ylim(c(-39.5, -33.5)) +
+      scale_fill_grey() +
+      theme_map() +
+      theme(legend.position="none")+
+      geom_point(map2_data %>% dplyr::filter(since_start_time == 90), 
+                 mapping=aes(x=lon, y=lat), 
+                 colour="orange") 
+    
+```
+
+Taking the 90th day of the fire season from 2019 to 2020, we can see that the 90th day of the fire season is a peak fire season with hotspots mainly in the eastern part of Victoria. The hotspots overlap highly with the density map below them.
+
+
+<br>
+
+# Shiny Web application
+
+Shiny is a package for R that enables users to build interactive web applications directly and conveniently from R. Users can host standalone applications on the web side, embed them in R's Markdown documents or build dashboards. (Shiny, n.d.)
+
+## Learning/challenges
+- shiny is a great tool for visualising data, not only to help learn some of the more complex logical combinations but also to display results in combination.
+
+- As shiny run top-down without truncation, if the preceding code is lengthy or the data is large, it is likely to take a long time to display the full content, i.e. the run time is too long.
+
+- It is difficult to test in shiny, it does not just run a section and the results appear, if the code is half finished but you want to see the intermediate results it is difficult to do so, you need to work with rmarkdown files.
+
+- Finding bugs is a difficult part of shiny, it doesn't tell you exactly which line the problem is on and you need to deduce it from your understanding.
+
+- For the reactive part, shiny has difficulty saving data, so at times when I needed to save data, I had to re-run the same code, which was one of the things that slowed it down.
+
+
+## Application file structure
+
+- app.R
+This file contains the front end and back end of the application. All the drawing and table code is in this file.
+
+- Data
+The data folder, as shown in the name, contains all the data used in this application. This data file does not contain the rawest data, it is too large to upload to git.
+
+- Datacleaning.rmd
+This file contains the code to try and clean the raw data, but it is currently not working as there is no raw data.
+
+- Clustering.r
+This file contains code for an attempt at clustering analysis and an attempt at how to output its results.
+
+- www
+This file contains all of the historical hotspot data motion graphics, which are stored in advance in order to reduce the length of the code and increase the speed of the code.
+
+- Create_gif.rmd
+This file contains the code to run the historical fire season hotspots from 2008 to 2022.
+
+```{r clicked-cell }
+knitr::include_graphics(here::here("www/file.png"))
+```
+
+
+# User-Interface
+
+## Design of the application
+
+As mentioned in the previous sections, this application is aimed at people who want to view information about bushfires in Victoria, so the design has been made as accessible as possible to people without a lot of expertise. I have combined diagrams and tables with some useful guidance to build this shiny app.
+
+This shiny app uses packages such as DT for aesthetics and fluidity. The interface of the app can be seen below.
+
+
+## Current hotspots
+
+This interface shows a map of the current hotspots created by the leaflet package. Clicking on the check new bushfire button at the top allows you to see if there are any new bushfires currently occurring, if there are, the system will pop up - new bushfires occurring, if not - no new bushfires.
+
+```{r}
+knitr::include_graphics(here::here("www/now.png"))
+```
+
+With the novice user in mind, clicking on the guide button will bring up the guide information for this screen, including the functions of each location.
+
+```{r }
+knitr::include_graphics(here::here("www/user1.png"))
+```
+
+
+## Historical Hotspots
+
+The graph on the left-hand side of the screen is a dynamic graph of fire seasonal hotspots, the time frame of this graph depends on the time selection drop-down box above it, the default time is 2021-2022. The graph on the right-hand side of the screen is a day-by-day hotspot display which is dependent on the time slider and time drop-down box above it. The sliding axis represents the number of days since the start of the fire season for that year.
+
+```{r }
+knitr::include_graphics(here::here("www/hist.png"))
+```
+
+Again, with novice users in mind, clicking on the guide button brings up guidance information for this interface, including the functions of each location.
+Data
+```{r }
+knitr::include_graphics(here::here("www/user2.png"))
+```
+
+To make it easier for users to view and download the data, both sections of the data are displayed using data table
+
+```{r }
+knitr::include_graphics(here::here("www/datatable.png"))
+```
+
+<br>
+
+# Limitations and Further direction
+
+## Limitation
+- The application is limited by the source of the data itself (the government website mentioned above) and is unable to get the latest data in a timely manner. The ideal update of data on the website is 7 minutes after a hot spot is found by satellite, but as the application itself requires a 10-minute refresh, the worst-case scenario for getting the data could be a 17-minute delay.
+
+- The website cannot be fully automated at the moment, i.e. the user has to click on the check button if they want to get alerts on new fires, otherwise, the system cannot do an automatic pop-up.
+
+- The application has a minimum number of 4 hotspots for determining the fire to which a hotspot belongs, if there are less than 4 hotspots in that range, it is currently judged to be a non-bush fire, but errors are unavoidable, especially during the time when the fire has just started and can be misjudged.
+
+- Hotspots may be subject to error. Hotspot data is not completely accurate as satellites may be affected by the cloud, for example, and thus fail to detect hotspots, or maybe misjudged due to industrial production.
+
+- As the government's hotspot sites can be filtered for satellites as well as algorithms, but this application does not currently have this feature, the number of hotspots currently displayed may differ from the number of government sites.
+
+
+## Further directions
+
+- Historical hotspot maps could be considered for consolidation into one, with only the year selected and the motion map can be paused and played at any time. This could be considered on better-performing computers using packages such as Plotly to achieve this.
+
+- We have only considered hotspot data up to 2022, but have not considered what to do with the data for this year, i.e. 2022-2023. As the only way to get data at the moment is to contact staff, the new bushfire season is only available for a 72-hour range and disappears once it is over, so it is not currently possible to view historical data for the latest years. A feature could be set up later to automatically fetch new data and store it.
+
+- Currently, there is only a pop-up warning message for new bushfires, but it would be useful to have an advance warning function, which could be incorporated into the app to create a dual-function prediction and warning app that would meet the needs of more users.
+
+- Optimising the code of the application is also a future direction to consider, as the current long initial run time may affect the user's perception of use.
+
+<br>
+
+# Conclusion
+
+During this internship, I created a responsive flashing dashboard. Users can view bushfire hotspot data for the current 72-hour period and its visual map as well as the distribution of bushfire hotspots for the 2008 to 2022 fire season. This internship not only gave me the opportunity to use what I have learned in the past in a practical way, but it also gave me an appreciation of how hard it is to make a product. My supervisor assisted me throughout the internship, guiding me on a weekly basis, providing ideas for my application development and helping me to solve difficult problems. Through this internship, I have not only enhanced my coding skills in R and Shinyapp, but I have also gained a new understanding of cluster analysis and some data visualisation embellishments.
+
+<br>
+
+# Acknowledgements
+I would like to give special thanks to my tutor, Dianne Cook, for her understanding and support throughout the course.
+
+<br>
+
+# Reference
+Ashe B, McAneney KJ, Pitman AJ (2009) Total cost of fire in Australia. J Risk Res 12:121–136
+
+Digital Earth Australia Hotspots. (n.d.). https://hotspots.dea.ga.gov.au/
+
+DENNEKAMP, M. and ABRAMSON, M.J. (2011), The effects of bushfire smoke on respiratory health. Respirology, 16: 198-209. https://doi.org/10.1111/j.1440-1843.2010.01868.x
+
+GitHub - TengMCing/spotoroo: spotoroo: spatiotemporal clustering in R of hot spot data. (n.d.). GitHub. https://github.com/TengMCing/spotoroo
+
+Li, Weihao. 2020. Using Remote Sensing Data to Understand Fire Ignitions in Victoria During the 2019-2020 Australian Bushfire Season. url.
+
+Teague, B., McLeod, R., Pascoe, S. (2010) 2009 Victorian Bushfires Royal Commission Final Report. Parliament of Victoria. Available at: www.royalcommission.vic.gov.au/Commission-Reports/Final-Report
+
+Mcgee, TK and Russell, S. 2003. ‘“It's just a natural way of life …” an investigation of wildfire preparedness in rural Australia’, Environmental Hazards, 5: 1–12.  [Google Scholar]
+
+Parisien, Marc-André, VG Kafka, KG Hirsch, JB Todd, SG Lavoie, PD Maczek, et al. 2005. “Mapping Wildfire Susceptibility with the BURN-P3 Simulation Model.”
+
+Shiny. (n.d.). https://shiny.rstudio.com/
+
+Thomson V (2013) Ashes of the fire fighters: Our personal journeys. Regal Printing Limited, Kowloon
+
+
